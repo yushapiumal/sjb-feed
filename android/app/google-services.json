@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "912364213375",
+    "firebase_url": "https://dsspa-73a47-default-rtdb.firebaseio.com",
+    "project_id": "dsspa-73a47",
+    "storage_bucket": "dsspa-73a47.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:912364213375:android:cec3d48aa582e2d88f5b4a",
+        "android_client_info": {
+          "package_name": "asia.ceynet.dsspa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkn6ddXUieiG6YLHlcOUqzNuJmcduBN5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

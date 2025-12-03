@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="facebook_app_id">843167544739574</string>
+    <string name="fb_login_protocol_scheme">fb843167544739574</string>
+    <string name="facebook_client_token">9387078b32b632a74646504fbe6b3ac0</string>
+    <string name="app_name">SJBDigital.org</string>
+</resources>
