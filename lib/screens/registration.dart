@@ -10,6 +10,7 @@ import 'package:statelink/screens/login_id.dart';
 import 'package:statelink/screens/unitls/text_util.dart';
 import 'package:statelink/screens/unitls/commonWidget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:statelink/theme/app_theme.dart';
 
 class RegistrationForm extends StatefulWidget {
   const RegistrationForm({super.key});
@@ -214,7 +215,7 @@ try {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_done, size: 64, color: Colors.green),
+              const Icon(Icons.cloud_done, size: 64, color: AppColors.primaryGreen),
               const SizedBox(height: 12),
               const Text(
                 'Registration Successful',
@@ -449,8 +450,8 @@ try {
             text: "Next".tr(),
             isLoading: isLoading,
             onPressed: _nextPageStage,
-            backgroundColor: Colors.white,
-            textColor: const Color.fromARGB(255, 12, 104, 15),
+            backgroundColor: AppColors.primaryGreen,
+            textColor: Colors.white,
             width: 200,
           ),
         ),
@@ -641,7 +642,7 @@ try {
             border: Border.all(
               color: (errorText != null)
                   ? Colors.red
-                  : Colors.black.withOpacity(0.3),
+                  : Colors.grey.shade300,
             ),
           ),
           child: DropdownButtonHideUnderline(
@@ -653,10 +654,9 @@ try {
               ),
               hint: Text(
                 hint,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 12,
-                  fontFamily: 'Poppins',
+                style: GoogleFonts.inter(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
                 ),
               ),
               items: items
@@ -665,9 +665,9 @@ try {
                       value: item,
                       child: Text(
                         item,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontFamily: 'Poppins',
+                        style: GoogleFonts.inter(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -683,7 +683,7 @@ try {
                 ),
               ),
               iconStyleData: const IconStyleData(
-                icon: Icon(Icons.arrow_drop_down, color: Colors.black),
+                icon: Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
               ),
             ),
           ),
@@ -717,50 +717,77 @@ try {
     return Scaffold(
       body: Stack(
         children: [
-          const Positioned.fill(
-            child: Image(
-              image: AssetImage('assets/images/loginbg.png'),
-              fit: BoxFit.cover,
+          // Gradient background
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primaryGreen,
+                  AppColors.secondaryGreen,
+                  const Color(0xFF043D33),
+                ],
+              ),
+            ),
+          ),
+          // Decorative circle
+          Positioned(
+            top: -50,
+            right: -40,
+            child: Container(
+              width: 180,
+              height: 180,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.accentOrange.withOpacity(0.07),
+              ),
             ),
           ),
           Align(
             alignment: Alignment.topLeft,
             child: Padding(
-              padding: const EdgeInsets.only(top: 170, left: 18),
-              child: Text(
-                'registration_form'.tr(),
-                style: GoogleFonts.poppins(
-                  fontSize: 34,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontStyle: FontStyle.italic,
-                ),
-                textAlign: TextAlign.center,
+              padding: const EdgeInsets.only(top: 80, left: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'registration_form'.tr(),
+                    style: GoogleFonts.inter(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Join the movement',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: 600,
+              height: MediaQuery.of(context).size.height * 0.72,
               width: double.infinity,
               decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/sjb_plashbg.png'),
-                  fit: BoxFit.cover,
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
                 ),
-                borderRadius: BorderRadius.only(topRight: Radius.circular(60)),
               ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(30),
-                ),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                  child: Container(
+              child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 25,
-                      vertical: 30,
+                      vertical: 24,
                     ),
                     // color: Colors.black.withOpacity(0.1),
                     child: SingleChildScrollView(
@@ -787,13 +814,8 @@ try {
                                       text: "Back".tr(),
                                       // isLoading: isLoading,
                                       onPressed: _backPageStage,
-                                      backgroundColor: const Color.fromARGB(
-                                        172,
-                                        66,
-                                        136,
-                                        9,
-                                      ),
-                                      textColor: Colors.white,
+                                      backgroundColor: AppColors.backgroundLight,
+                                      textColor: AppColors.textPrimary,
                                       width: 200,
                                     ),
                                   ),
@@ -807,13 +829,8 @@ try {
                                       onPressed: isLoading
                                           ? null
                                           : () => _submitForm(),
-                                      backgroundColor: Colors.white,
-                                      textColor: const Color.fromARGB(
-                                        255,
-                                        12,
-                                        104,
-                                        15,
-                                      ),
+                                      backgroundColor: AppColors.accentOrange,
+                                      textColor: Colors.white,
                                       width: 200,
                                     ),
                                   ),
@@ -824,10 +841,8 @@ try {
                       ),
                     ),
                   ),
-                ),
               ),
             ),
-          ),
         ],
       ),
     );

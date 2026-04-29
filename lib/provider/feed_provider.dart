@@ -1,43 +1,50 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:statelink/screens/old_feed/model/feed_model.dart';
 
 class PostProvider with ChangeNotifier {
-  final FirebaseStorage storage = FirebaseStorage.instance;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   List<Feed> posts = [];
   bool isLoading = false;
-
+  String errorMessage = '';
 
   Future<void> fetchPosts() async {
     isLoading = true;
+    errorMessage = '';
     notifyListeners();
 
     try {
-      final ListResult result = await storage.ref('posts').listAll();
+      // Read posts directly from Firestore — Firebase Storage is NOT used
+      // Each Firestore document must have an 'imageUrl' field with a direct image URL
+      final QuerySnapshot snapshot =
+          await firestore.collection('posts').get();
+
       final List<Feed> tempPosts = [];
 
-      for (var ref in result.items) {
-        final url = await ref.getDownloadURL();
-        final doc = await firestore.collection('posts').doc(ref.name).get();
-        if (!doc.exists) {
-          await firestore.collection('posts').doc(ref.name).set({
-            'storagePath': ref.fullPath,
-            'likes': [],
-            'comments': [],
-            'createdAt': FieldValue.serverTimestamp(),
-          });
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final String url = (data['imageUrl'] ?? '').toString().trim();
+
+        if (url.isEmpty) {
+          debugPrint(
+            "⚠️  Post [${doc.id}] skipped — add an 'imageUrl' field in Firestore for this document.",
+          );
+          continue;
         }
 
-        final feed = Feed.fromFirestore(doc.exists ? doc : await firestore.collection('posts').doc(ref.name).get(), url);
-        tempPosts.add(feed);
+        tempPosts.add(Feed.fromFirestore(doc, url));
       }
 
       posts = tempPosts;
+
+      if (posts.isEmpty) {
+        errorMessage =
+            'No posts found.\nAdd an imageUrl field to each document in the Firestore posts collection.';
+      }
     } catch (e) {
-      debugPrint("Error fetching posts: $e");
+      errorMessage = 'Failed to load posts.';
+      debugPrint("❌ Error fetching posts: $e");
     }
 
     isLoading = false;

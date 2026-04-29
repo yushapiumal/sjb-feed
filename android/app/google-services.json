@@ -13,7 +13,20 @@
           "package_name": "asia.ceynet.dsspa"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "912364213375-1an014i4cbgjrj0obfmsv8fg2ukklhei.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "asia.ceynet.dsspa",
+            "certificate_hash": "e66b0797fd7c702e5d5c8080be495ee41e0bbcfc"
+          }
+        },
+        {
+          "client_id": "912364213375-3bv7e3tng3aket5umnr7q6qnboajqds9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBkn6ddXUieiG6YLHlcOUqzNuJmcduBN5Y"
@@ -21,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "912364213375-3bv7e3tng3aket5umnr7q6qnboajqds9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "912364213375-ss5k5236r9m9roe5ai3s40su2kag3m1c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.statelink"
+              }
+            }
+          ]
         }
       }
     }

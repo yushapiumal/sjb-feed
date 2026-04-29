@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_indicator/loading_indicator.dart';
+import 'package:statelink/theme/app_theme.dart';
 
 
 class CustomTextField extends StatefulWidget {
@@ -11,7 +12,7 @@ class CustomTextField extends StatefulWidget {
   final bool isPassword;
   final String? Function(String?)? validator;
   final int maxLines;
-  final List<TextInputFormatter>? inputFormatters; // ✅ Added this
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextField({
     super.key,
@@ -20,7 +21,7 @@ class CustomTextField extends StatefulWidget {
     this.isPassword = false,
     this.validator,
     this.maxLines = 1,
-    this.inputFormatters, // ✅ Added this
+    this.inputFormatters,
   });
 
   @override
@@ -36,33 +37,33 @@ class _CustomTextFieldState extends State<CustomTextField> {
       obscureText: widget.isPassword ? _obscureText : false,
       controller: widget.controller,
       maxLines: widget.maxLines,
-      inputFormatters: widget.inputFormatters, // ✅ Added this line
-      style: GoogleFonts.poppins(
-        color: Colors.black,
+      inputFormatters: widget.inputFormatters,
+      style: GoogleFonts.inter(
+        color: AppColors.textPrimary,
         fontSize: 14,
         fontWeight: FontWeight.w500,
       ),
-      cursorColor: Colors.black,
+      cursorColor: AppColors.primaryGreen,
       decoration: InputDecoration(
         labelText: widget.label,
-        labelStyle: GoogleFonts.poppins(
-          color: Colors.black,
-          fontSize: 12,
+        labelStyle: GoogleFonts.inter(
+          color: AppColors.textSecondary,
+          fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.7),
+        fillColor: AppColors.backgroundLight,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.black.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.black.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.black.withOpacity(0.5)),
+          borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -72,13 +73,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Colors.red),
         ),
-        errorStyle: GoogleFonts.poppins(
+        errorStyle: GoogleFonts.inter(
           color: Colors.red,
           fontSize: 10,
           fontWeight: FontWeight.w500,
         ),
         suffixIcon: widget.controller.text.isNotEmpty
-            ? const Icon(Icons.check_circle, color: Colors.green, size: 20)
+            ? const Icon(Icons.check_circle, color: AppColors.primaryGreen, size: 20)
             : widget.isPassword
                 ? GestureDetector(
                     onTap: () =>
@@ -87,7 +88,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                       _obscureText
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      color: Colors.black38,
+                      color: AppColors.textSecondary,
                     ),
                   )
                 : null,
@@ -115,9 +116,9 @@ class CommonButton extends StatelessWidget {
     required this.text,
     required this.onPressed,
     this.isLoading = false,
-    this.backgroundColor = const Color.fromARGB(172, 66, 136, 9),
-    this.textColor = Colors.black,
-    this.borderRadius = 20,
+    this.backgroundColor = AppColors.primaryGreen,
+    this.textColor = Colors.white,
+    this.borderRadius = 16,
     this.width,
     this.height,
   });
@@ -126,12 +127,14 @@ class CommonButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: width ?? double.infinity,
-      height: height ?? 50,
+      height: height ?? 52,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: textColor,
+          elevation: 2,
+          shadowColor: backgroundColor.withOpacity(0.3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius),
           ),
@@ -142,14 +145,14 @@ class CommonButton extends StatelessWidget {
                 width: 50,
                 child: LoadingIndicator(
                   indicatorType: Indicator.ballPulse,
-                  colors: [Colors.green, Colors.yellow],
+                  colors: [AppColors.accentOrange, Colors.white],
                 ),
               )
             : Text(
                 text.tr(),
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                   fontSize: 16,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
                 ),
               ),
       ),

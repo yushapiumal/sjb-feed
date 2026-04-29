@@ -9,6 +9,7 @@ import 'package:statelink/screens/old_feed/auth_provider.dart';
 import 'package:statelink/provider/feed_provider.dart';
 import 'package:statelink/screens/splashScreen.dart';
 import 'package:statelink/services/notification_service.dart';
+import 'package:statelink/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -90,23 +91,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         title: 'SJB Mobile App',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          textTheme: GoogleFonts.robotoTextTheme(Theme.of(context).textTheme),
-          scaffoldBackgroundColor: Colors.grey[100],
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Colors.blue,
-            elevation: 0,
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
-        ),
+        theme: AppTheme.lightTheme,
         locale: context.locale,
         supportedLocales: context.supportedLocales,
         localizationsDelegates: context.localizationDelegates,

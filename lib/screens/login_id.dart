@@ -7,6 +7,7 @@ import 'package:statelink/api/sjb_api.dart';
 import 'package:statelink/screens/logn_fb&google.dart';
 import 'package:statelink/screens/registration.dart';
 import 'package:statelink/screens/unitls/commonWidget.dart';
+import 'package:statelink/theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,140 +16,205 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   bool isLoading = false;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _membershipIdController = TextEditingController();
 
-Future<void> _login() async {
-  if (!_formKey.currentState!.validate()) return;
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
 
-  setState(() => isLoading = true);
-
-  final body = {'membership_id': _membershipIdController.text};
-
-  try {
-    final res = await ApiService.login(body);
-    if (!mounted) return;
-
-    bool success = res is Map && res['status'] == 'success';
-    String message = (res is Map && res['message'] != null) ? res['message'].toString() : '';
-
-    if (success) {
-   context.go('/social_login', extra: message);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login failed')),
-      );
-    }
-  } catch (e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Server error')),
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
     );
-  } finally {
-    if (mounted) setState(() => isLoading = false);
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeIn);
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+    _animController.forward();
   }
-}
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    _membershipIdController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => isLoading = true);
+
+    final body = {'membership_id': _membershipIdController.text};
+
+    try {
+      final res = await ApiService.login(body);
+      if (!mounted) return;
+
+      bool success = res is Map && res['status'] == 'success';
+      String message = (res is Map && res['message'] != null) ? res['message'].toString() : '';
+
+      if (success) {
+        context.go('/social_login', extra: message);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login failed')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Server error')),
+      );
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final double screenHeight = MediaQuery.of(context).size.height;
-    final double bottomSheetMinHeight = 500;
-    final double loginLabelTopOffset = screenHeight - bottomSheetMinHeight - 50;
-    final double logoImageAlignment = screenHeight - bottomSheetMinHeight - 200;
-
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image
-          Positioned.fill(
-            child: Image.asset('assets/images/loginbg.png', fit: BoxFit.cover),
+          // Gradient background
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primaryGreen,
+                  AppColors.secondaryGreen,
+                  const Color(0xFF043D33),
+                ],
+              ),
+            ),
           ),
-              Positioned(
-            top: logoImageAlignment,
+
+          // Decorative circles
+          Positioned(
+            top: -80,
+            left: -50,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.accentOrange.withOpacity(0.08),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.15,
+            right: -30,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.05),
+              ),
+            ),
+          ),
+
+          // Logo and title
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.12,
             left: 0,
             right: 0,
             child: Column(
               children: [
-                const SizedBox(height: 5),
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),    
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
+                    borderRadius: BorderRadius.circular(80),
                     child: Image.asset(
                       "assets/images/loader.gif",
-                      width: 120,
-                      height: 120,
+                      width: 180,
+                      height: 180,
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                Text(
-                  'login'.tr(),
-                  style: GoogleFonts.poppins(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontStyle: FontStyle.italic,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.5),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 30),
+                // Text(
+                //   'login'.tr(),
+                //   style: GoogleFonts.inter(
+                //     fontSize: 32,
+                //     fontWeight: FontWeight.w800,
+                //     color: Colors.white,
+                //     letterSpacing: -0.5,
+                //   ),
+                //   textAlign: TextAlign.center,
+                // ),
               ],
             ),
           ),
 
-          // Bottom Sheet
+          // Bottom card
           Align(
             alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              constraints: BoxConstraints(minHeight: bottomSheetMinHeight),
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/sjb_plashbg.png'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                ),
-                borderRadius: BorderRadius.only(topRight: Radius.circular(60)),
-              ),
-
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(60),
-                ),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 25,
-                      vertical: 30,
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SlideTransition(
+                position: _slideAnim,
+                child: Container(
+                  width: double.infinity,
+                  constraints: BoxConstraints(
+                    minHeight: MediaQuery.of(context).size.height * 0.50,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(32),
+                      topRight: Radius.circular(32),
                     ),
-                    // color: Colors.black.withOpacity(0.1),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 50),
+                          Text(
+                            "Welcome Back",
+                            style: GoogleFonts.inter(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            "Enter your membership ID to continue",
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
                           CustomTextField(
                             label: 'membership_id'.tr(),
                             controller: _membershipIdController,
                             isPassword: false,
-                            // icon: Icons.person,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return "Please enter your Membership ID";
@@ -156,59 +222,82 @@ Future<void> _login() async {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 32),
 
                           // Next Button
-                          Container(
-                            width: 200,
-                            alignment: Alignment.center,
-                            child: CommonButton(
-                              text: 'next'.tr(),
-                              isLoading: isLoading,
-                              backgroundColor: Colors.white,
-                              textColor: const Color.fromARGB(255, 39, 116, 24),
-                              borderRadius: 14,
-                              height: 52,
-                              onPressed: isLoading ? null : _login,
-                            ),
-                          ),
-
-                          const SizedBox(height: 10),
-                          GestureDetector(
-                            onTap: () {
-                              context.go('/register');
-                            },
-                            child: Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: "haven't_account".tr(),
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.black,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                          Center(
+                            child: GestureDetector(
+                              onTap: isLoading ? null : _login,
+                              child: Container(
+                                width: 220,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [AppColors.accentOrange, Color(0xFFE09800)],
                                   ),
-                                  TextSpan(
-                                    text: 'go_member_page'.tr(),
-                                    style: GoogleFonts.poppins(
-                                      color: const Color.fromARGB(
-                                        255,
-                                        26,
-                                        104,
-                                        28,
-                                      ),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      decoration: TextDecoration.underline,
-                                      decorationColor: Colors.green,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.accentOrange.withOpacity(0.35),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 8),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
+                                child: Center(
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : Text(
+                                          'next'.tr(),
+                                          style: GoogleFonts.inter(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 20),
+
+                          const SizedBox(height: 16),
+                          Center(
+                            child: GestureDetector(
+                              onTap: () => context.go('/register'),
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: "haven't_account".tr(),
+                                      style: GoogleFonts.inter(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: 'go_member_page'.tr(),
+                                      style: GoogleFonts.inter(
+                                        color: AppColors.primaryGreen,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: AppColors.primaryGreen,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
