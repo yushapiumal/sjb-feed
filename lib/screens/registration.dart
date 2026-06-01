@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +41,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   String? _selectedDay;
   String? _selectedMonth;
   String? _selectedYear;
+  DateTime? _selectedBirthday;
   String? _selectedDistrict;
   String? _selectedElectoralDivision;
   String? _selectedGramaNiladhari;
@@ -187,64 +189,68 @@ class _RegistrationFormState extends State<RegistrationForm> {
 
     setState(() => isLoading = true);
 
-   Future<void> saveMemberId(String memberId) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('member_id', memberId);
-}
-try {
-  final res = await ApiService.registerUser(body);
-  bool success = res is Map && res['status'] == 'success';
-
-  if (success) {
-    setState(() => isLoading = false);
-
-    final memberId = res['body']?['member_id']?.toString();
-
-    if (memberId != null) {
-      await saveMemberId(memberId);   
+    Future<void> saveMemberId(String memberId) async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('member_id', memberId);
     }
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.cloud_done, size: 64, color: AppColors.primaryGreen),
-              const SizedBox(height: 12),
-              const Text(
-                'Registration Successful',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+
+    try {
+      final res = await ApiService.registerUser(body);
+      bool success = res is Map && res['status'] == 'success';
+
+      if (success) {
+        setState(() => isLoading = false);
+
+        final memberId = res['body']?['member_id']?.toString();
+
+        if (memberId != null) {
+          await saveMemberId(memberId);
+        }
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.cloud_done,
+                    size: 64,
+                    color: AppColors.primaryGreen,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Registration Successful',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Thank you! Your Member ID: $memberId',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.go('/login');
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Thank you! Your Member ID: $memberId',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  context.go('/login');
-                },
-                child: const Text('OK'),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
-  } else {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Registration failed')));
-  }
-
-
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Registration failed')));
+      }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -279,6 +285,80 @@ try {
     if (_currentPage == 1) {
       setState(() => _currentPage = 0);
     }
+  }
+
+  void _showBirthdayPicker(BuildContext context) {
+    final initial = _selectedBirthday ?? DateTime(2000, 1, 1);
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SizedBox(
+        height: 320,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Done',
+                      style: TextStyle(
+                        color: AppColors.primaryGreen,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: CupertinoTheme(
+                data: const CupertinoThemeData(
+                  primaryColor: AppColors.accentOrange,
+                  textTheme: CupertinoTextThemeData(
+                    dateTimePickerTextStyle: TextStyle(
+                      color: AppColors.accentOrange,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: initial,
+                  maximumDate: DateTime.now(),
+                  minimumDate: DateTime(1900),
+                  onDateTimeChanged: (date) {
+                    setState(() {
+                      _selectedBirthday = date;
+                      _selectedDay = date.day.toString();
+                      _selectedMonth = date.month.toString();
+                      _selectedYear = date.year.toString();
+                      _dayError = null;
+                      _monthError = null;
+                      _yearError = null;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   String? _validateEmail(String? value) {
@@ -348,61 +428,81 @@ try {
           ],
         ),
         const SizedBox(height: 20),
-        Text(
-          'birthday'.tr(),
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
+        // Text(
+        //   'birthday'.tr(),
+        //   style: const TextStyle(
+        //     fontSize: 14,
+        //     fontWeight: FontWeight.bold,
+        //     color: Colors.black,
+        //   ),
+        // ),
         const SizedBox(height: 4),
-        Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Flexible(
-                  fit: FlexFit.tight,
-                  child: _dropdownField(
-                    'day'.tr(),
-                    days,
-                    (v) => setState(() {
-                      _selectedDay = v;
-                      _dayError = null;
-                    }),
-                    errorText: _dayError,
+        GestureDetector(
+          onTap: () => _showBirthdayPicker(context),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 50,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.backgroundLight,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: (_dayError != null)
+                        ? Colors.red
+                        : Colors.grey.shade300,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Flexible(
-                  fit: FlexFit.tight,
-                  child: _dropdownField(
-                    'month'.tr(),
-                    months,
-                    (v) => setState(() {
-                      _selectedMonth = v;
-                      _monthError = null;
-                    }),
-                    errorText: _monthError,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _selectedBirthday != null
+                            ? '${_selectedDay!.padLeft(2, '0')}/${_selectedMonth!.padLeft(2, '0')}/$_selectedYear'
+                            : 'birthday'.tr(),
+                        style: GoogleFonts.inter(
+                          color: _selectedBirthday != null
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.accentOrange,
+                          width: 1.2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_today,
+                        color: AppColors.accentOrange,
+                        size: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_dayError != null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, top: 4),
+                  child: Text(
+                    _dayError!,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Flexible(
-                  fit: FlexFit.tight,
-                  child: _dropdownField(
-                    'year'.tr(),
-                    years,
-                    (v) => setState(() {
-                      _selectedYear = v;
-                      _yearError = null;
-                    }),
-                    errorText: _yearError,
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 20),
 
@@ -414,22 +514,28 @@ try {
         ),
 
         const SizedBox(height: 20),
-        CustomTextField(
-          label: 'whatsapp_number'.tr(),
-          controller: _whatsAppController,
-          isPassword: false,
-          inputFormatters: [_phoneFormatter],
-          validator: _validatePhone,
-          // icon: Icons.message,
-        ),
-        const SizedBox(height: 20),
-        CustomTextField(
-          label: 'mobile_number'.tr(),
-          controller: _mobileController,
-          isPassword: false,
-          inputFormatters: [_phoneFormatter],
-          validator: _validatePhone,
-          // icon: Icons.phone_android,
+        Row(
+          children: [
+            Expanded(
+              child: CustomTextField(
+                label: 'whatsapp_number'.tr(),
+                controller: _whatsAppController,
+                isPassword: false,
+                inputFormatters: [_phoneFormatter],
+                validator: _validatePhone,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: CustomTextField(
+                label: 'mobile_number'.tr(),
+                controller: _mobileController,
+                isPassword: false,
+                inputFormatters: [_phoneFormatter],
+                validator: _validatePhone,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 20),
         CustomTextField(
@@ -443,16 +549,40 @@ try {
         const SizedBox(height: 20),
 
         const SizedBox(height: 20),
-        Align(
-          alignment: Alignment.bottomRight,
-
-          child: CommonButton(
-            text: "Next".tr(),
-            isLoading: isLoading,
-            onPressed: _nextPageStage,
-            backgroundColor: AppColors.primaryGreen,
-            textColor: Colors.white,
-            width: 200,
+        CommonButton(
+          text: "Next".tr(),
+          isLoading: isLoading,
+          onPressed: _nextPageStage,
+          backgroundColor: AppColors.primaryGreen,
+          textColor: Colors.white,
+          width: double.infinity,
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: RichText(
+            text: TextSpan(
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+              children: [
+                const TextSpan(text: 'Already have an account? '),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: GestureDetector(
+                    onTap: () => context.go('/login'),
+                    child: Text(
+                      'Login',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryGreen,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -638,11 +768,10 @@ try {
         Container(
           height: 50,
           decoration: BoxDecoration(
+            color: AppColors.backgroundLight,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: (errorText != null)
-                  ? Colors.red
-                  : Colors.grey.shade300,
+              color: (errorText != null) ? Colors.red : Colors.grey.shade300,
             ),
           ),
           child: DropdownButtonHideUnderline(
@@ -683,7 +812,23 @@ try {
                 ),
               ),
               iconStyleData: const IconStyleData(
-                icon: Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                icon: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.fromBorderSide(
+                        BorderSide(color: AppColors.textSecondary, width: 1.2),
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -714,40 +859,50 @@ try {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Gradient background
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.primaryGreen,
-                  AppColors.secondaryGreen,
-                  const Color(0xFF043D33),
-                ],
-              ),
-            ),
-          ),
-          // Decorative circle
-          Positioned(
-            top: -50,
-            right: -40,
-            child: Container(
-              width: 180,
-              height: 180,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_currentPage == 1) {
+          setState(() => _currentPage = 0);
+        } else {
+          context.go('/login');
+        }
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // Gradient background
+            Container(
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accentOrange.withOpacity(0.07),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.primaryGreen,
+                    AppColors.secondaryGreen,
+                    const Color(0xFF043D33),
+                  ],
+                ),
               ),
             ),
-          ),
-          Align(
-            alignment: Alignment.topLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 80, left: 24),
+            // Decorative circle
+            Positioned(
+              top: -50,
+              right: -40,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.accentOrange.withOpacity(0.07),
+                ),
+              ),
+            ),
+
+            Positioned(
+              bottom: MediaQuery.of(context).size.height * 0.72 + 12,
+              left: 24,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -760,7 +915,7 @@ try {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(height: 6),
+
                   Text(
                     'Join the movement',
                     style: GoogleFonts.inter(
@@ -771,80 +926,79 @@ try {
                 ],
               ),
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.72,
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-              ),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.bottomCenter,
               child: Container(
+                height: MediaQuery.of(context).size.height * 0.72,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 25,
+                    vertical: 24,
+                  ),
+                  // color: Colors.black.withOpacity(0.1),
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 25,
-                      vertical: 24,
+                      horizontal: 2,
+                      vertical: 30,
                     ),
-                    // color: Colors.black.withOpacity(0.1),
-                    child: SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 2,
-                        vertical: 30,
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 10),
-                            _currentPage == 0
-                                ? _buildPageOne()
-                                : _buildPageTwo(),
-                            const SizedBox(height: 40),
-                            if (_currentPage == 1)
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Expanded(
-                                    child: CommonButton(
-                                      text: "Back".tr(),
-                                      // isLoading: isLoading,
-                                      onPressed: _backPageStage,
-                                      backgroundColor: AppColors.backgroundLight,
-                                      textColor: AppColors.textPrimary,
-                                      width: 200,
-                                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 10),
+                          _currentPage == 0 ? _buildPageOne() : _buildPageTwo(),
+                          const SizedBox(height: 40),
+                          if (_currentPage == 1)
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: CommonButton(
+                                    text: "Back".tr(),
+                                    // isLoading: isLoading,
+                                    onPressed: _backPageStage,
+                                    backgroundColor: AppColors.backgroundLight,
+                                    textColor: AppColors.textPrimary,
+                                    width: 200,
                                   ),
+                                ),
 
-                                  SizedBox(width: 120),
+                                SizedBox(width: 120),
 
-                                  Expanded(
-                                    child: CommonButton(
-                                      text: "Submit",
-                                      isLoading: isLoading,
-                                      onPressed: isLoading
-                                          ? null
-                                          : () => _submitForm(),
-                                      backgroundColor: AppColors.accentOrange,
-                                      textColor: Colors.white,
-                                      width: 200,
-                                    ),
+                                Expanded(
+                                  child: CommonButton(
+                                    text: "Submit",
+                                    isLoading: isLoading,
+                                    onPressed: isLoading
+                                        ? null
+                                        : () => _submitForm(),
+                                    backgroundColor: AppColors.primaryGreen,
+                                    textColor: Colors.white,
+                                    width: 200,
                                   ),
-                                ],
-                              ),
-                          ],
-                        ),
+                                ),
+                              ],
+                            ),
+                        ],
                       ),
                     ),
                   ),
+                ),
               ),
             ),
-        ],
-      ),
-    );
+          ],
+        ),
+      ), // Scaffold
+    ); // PopScope
   }
 }

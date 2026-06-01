@@ -1,0 +1,43 @@
+moduledependenciestarget: \
+  /Users/admin/yushan/sjb-feed/ios/.derivedData/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/AppAuth.build/module.modulemap \
+  /Users/admin/yushan/sjb-feed/ios/Pods/Target\ Support\ Files/AppAuth/AppAuth-umbrella.h \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator18.2.sdk/System/Library/Frameworks/UIKit.framework/Modules/module.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator18.2.sdk/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap \
+  /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator18.2.sdk/usr/include/TargetConditionals.modulemap \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDAuthState.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDAuthStateChangeDelegate.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDAuthStateErrorDelegate.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDAuthorizationRequest.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDExternalUserAgentRequest.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDResponseTypes.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDScopes.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDAuthorizationResponse.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDAuthorizationService.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDError.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDErrorUtilities.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDExternalUserAgent.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDExternalUserAgentSession.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDGrantTypes.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDIDToken.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDRegistrationRequest.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDRegistrationResponse.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDScopeUtilities.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDServiceConfiguration.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDServiceDiscovery.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDTokenRequest.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDTokenResponse.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDTokenUtilities.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDURLSessionProvider.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDEndSessionRequest.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDEndSessionResponse.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDClientMetadataParameters.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDDefines.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDFieldMapping.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuthCore/OIDURLQueryComponent.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuth.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDAuthState+IOS.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDAuthorizationService+IOS.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOS.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentIOSCustomBrowser.h \
+  /Users/admin/yushan/sjb-feed/ios/Pods/AppAuth/Sources/AppAuth/iOS/OIDExternalUserAgentCatalyst.h

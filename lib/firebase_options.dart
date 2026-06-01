@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform, kIsWeb;
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -36,12 +37,13 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY',
-    appId: 'YOUR_IOS_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    apiKey: 'AIzaSyChHGzYofdgILci5bPdCpFMBclhbESBwT0',
+    appId: '1:912364213375:ios:54c08693da5a2a7b8f5b4a',
+    messagingSenderId: '912364213375',
     projectId: 'dsspa-73a47',
     storageBucket: 'dsspa-73a47.appspot.com',
-    iosClientId: 'YOUR_IOS_CLIENT_ID',
-    iosBundleId: 'YOUR_IOS_BUNDLE_ID',
+    iosClientId:
+        '912364213375-ss5k5236r9m9roe5ai3s40su2kag3m1c.apps.googleusercontent.com',
+    iosBundleId: 'com.example.statelink',
   );
 }

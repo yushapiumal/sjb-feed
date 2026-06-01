@@ -24,46 +24,52 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
+  bool firebaseReady = false;
   try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
-      print("Firebase initialized successfully");
-    } else {
-      print("Firebase already initialized, skipping initialization");
     }
+    firebaseReady = true;
+    print("Firebase initialized successfully");
   } catch (e) {
     print("Firebase initialization error: $e");
   }
 
-  try {
-    await FirebaseMessaging.instance.setAutoInitEnabled(true);
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    print("Background message handler registered");
-  } catch (e) {
-    print("Error setting up background messaging: $e");
-  }
+  if (firebaseReady) {
+    try {
+      await FirebaseMessaging.instance.setAutoInitEnabled(true);
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
+      print("Background message handler registered");
+    } catch (e) {
+      print("Error setting up background messaging: $e");
+    }
 
-  try {
-    await NotificationService.initialize();
-    print("NotificationService initialized successfully");
-  } catch (e) {
-    print("NotificationService initialization error: $e");
-  }
-  try {
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.debug,
-    );
-    print("App check initialized successfully");
-  } catch (e) {
-    print("NotificationService initialization error: $e");
-  }
+    try {
+      await NotificationService.initialize();
+      print("NotificationService initialized successfully");
+    } catch (e) {
+      print("NotificationService initialization error: $e");
+    }
 
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    print("Foreground message received: ${message.messageId}");
-    NotificationService.showNotification(message);
-  });
+    try {
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.debug,
+        appleProvider: AppleProvider.debug,
+      );
+      print("App check initialized successfully");
+    } catch (e) {
+      print("AppCheck initialization error: $e");
+    }
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print("Foreground message received: ${message.messageId}");
+      NotificationService.showNotification(message);
+    });
+  }
 
   runApp(
     EasyLocalization(
@@ -97,7 +103,7 @@ class MyApp extends StatelessWidget {
         localizationsDelegates: context.localizationDelegates,
         routerConfig: appRouter,
 
-       // home: const SplashScreen(),
+        // home: const SplashScreen(),
       ),
     );
   }

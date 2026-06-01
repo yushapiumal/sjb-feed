@@ -2,6 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Bundle identity -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -22,6 +23,88 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+
+	<!-- Localizations (easy_localization: en, si, ta) -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>si</string>
+		<string>ta</string>
+	</array>
+
+	<!-- URL schemes: Facebook + Google Sign-In (reversed client ID) -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<!-- Facebook login -->
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb594523606870232</string>
+			</array>
+		</dict>
+		<!-- Google Sign-In: replace REVERSED_CLIENT_ID with the value from
+		     your GoogleService-Info.plist (e.g. com.googleusercontent.apps.XXXXX) -->
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- Facebook SDK configuration -->
+	<key>FacebookAppID</key>
+	<string>594523606870232</string>
+	<key>FacebookDisplayName</key>
+	<string>Statelink</string>
+	<!-- Replace with your Facebook Client Token from the Facebook Developer portal -->
+	<key>FacebookClientToken</key>
+	<string>YOUR_FACEBOOK_CLIENT_TOKEN</string>
+	<key>FacebookAutoLogAppEventsEnabled</key>
+	<false/>
+	<key>FacebookAdvertiserIDCollectionEnabled</key>
+	<false/>
+
+	<!-- Queried URL schemes (required for Facebook SDK and share_plus) -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fbapi</string>
+		<string>fbapi20130214</string>
+		<string>fbauth</string>
+		<string>fbauth2</string>
+		<string>fb-messenger-share-api</string>
+		<string>fbshareextension</string>
+		<string>fbapi20130410</string>
+		<string>fbapi20130702</string>
+		<string>fbapi20131010</string>
+		<string>fbapi20131219</string>
+		<string>fbapi20140410</string>
+		<string>fbapi20140116</string>
+		<string>fbapi20150313</string>
+		<string>fbapi20150629</string>
+		<string>fbapi20160328</string>
+	</array>
+
+	<!-- Privacy permission strings (required by App Store) -->
+	<key>NSCameraUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs camera access to let you capture and share photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs access to your photo library to let you select and share images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs permission to save images to your photo library.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs microphone access to record audio messages.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>$(PRODUCT_NAME) sends notifications to keep you updated on the latest news and activity.</string>
+
+	<!-- Background modes for Firebase Messaging -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- UI settings -->
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -34,16 +117,6 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CFBundleURLTypes</key>
-      <array>
-       <dict>
-    <key>CFBundleURLSchemes</key>
-    <array>
-      <string>fb594523606870232</string>
-    </array>
-    </dict>
-    </array>
-
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

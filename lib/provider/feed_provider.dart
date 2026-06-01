@@ -17,8 +17,7 @@ class PostProvider with ChangeNotifier {
     try {
       // Read posts directly from Firestore — Firebase Storage is NOT used
       // Each Firestore document must have an 'imageUrl' field with a direct image URL
-      final QuerySnapshot snapshot =
-          await firestore.collection('posts').get();
+      final QuerySnapshot snapshot = await firestore.collection('posts').get();
 
       final List<Feed> tempPosts = [];
 
@@ -64,32 +63,28 @@ class PostProvider with ChangeNotifier {
     notifyListeners();
   }
 
- 
-Future<void> addComment(Feed post, String userId, String commentText) async {
-  if (commentText.trim().isEmpty) return;
+  Future<void> addComment(Feed post, String userId, String commentText) async {
+    if (commentText.trim().isEmpty) return;
 
-  final postRef = firestore.collection('posts').doc(post.postId);
+    final postRef = firestore.collection('posts').doc(post.postId);
 
-  final newComment = {
-    'userId': userId,
-    'comment': commentText.trim(),
-    //'timestamp': FieldValue.serverTimestamp(),
-  };
-
-  try {
-    await postRef.set({
-      'comments': FieldValue.arrayUnion([newComment]),
-    }, SetOptions(merge: true));
-
-    post.comments.add({
+    final newComment = {
       'userId': userId,
       'comment': commentText.trim(),
-    });
+      //'timestamp': FieldValue.serverTimestamp(),
+    };
 
-    notifyListeners();
-  } catch (e, s) {
-    debugPrint('Comment error: $e');
-    debugPrint('Stack: $s');
+    try {
+      await postRef.set({
+        'comments': FieldValue.arrayUnion([newComment]),
+      }, SetOptions(merge: true));
+
+      post.comments.add({'userId': userId, 'comment': commentText.trim()});
+
+      notifyListeners();
+    } catch (e, s) {
+      debugPrint('Comment error: $e');
+      debugPrint('Stack: $s');
+    }
   }
-}
 }

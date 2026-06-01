@@ -1,0 +1,95 @@
+{
+  "main_library": {
+    "exported_symbols": [
+      {
+        "data": {
+          "global": [
+            "_$s21flutter_facebook_auth12FacebookAuthCACycfC",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC0bG0AA0fG0Cvpfi",
+            "_$s21flutter_facebook_auth12FacebookAuthC12loginManager13FBSDKLoginKit05LoginG0Cvpfi",
+            "_$s21flutter_facebook_auth12FacebookAuthC13pendingResultyypSgcSgvpfi",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC11application_4open7optionsSbSo13UIApplicationC_10Foundation3URLVSDySo0L17OpenURLOptionsKeyaypGtF",
+            "_$s21flutter_facebook_auth12FacebookAuthC12loginManager13FBSDKLoginKit05LoginG0Cvg",
+            "_$s21flutter_facebook_auth12FacebookAuthCACycfc",
+            "_$s21flutter_facebook_auth12FacebookAuthCMn",
+            "_$s21flutter_facebook_auth12FacebookAuthCfD",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginCMn",
+            "_$s21flutter_facebook_auth12FacebookAuthC12loginManager13FBSDKLoginKit05LoginG0CvpWvd",
+            "_$s21flutter_facebook_auth12FacebookAuthC15finishWithError33_0CD7F4A0409F9E3BEE3EA7D01DC1C234LL9errorCode7messageySS_SStF",
+            "_$s21flutter_facebook_auth12FacebookAuthCN",
+            "_$s21flutter_facebook_auth12FacebookAuthC13pendingResultyypSgcSgvM",
+            "_$s21flutter_facebook_auth12FacebookAuthC29updateAutoLogAppEventsEnabled33_0CD7F4A0409F9E3BEE3EA7D01DC1C234LL7enabled0A6ResultySb_yypSgctF",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC8register4withySo0eH9Registrar_p_tFZ",
+            "_$s21flutter_facebook_auth12FacebookAuthC13pendingResultyypSgcSgvg",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginCN",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginCACycfC",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginCMa",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC0bG0AA0fG0CvpWvd",
+            "_$s21flutter_facebook_auth12FacebookAuthC6handle_6resultySo17FlutterMethodCallC_yypSgctFTq",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginCfD",
+            "_$s21flutter_facebook_auth12FacebookAuthC13pendingResultyypSgcSgvpMV",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC0bG0AA0fG0Cvg",
+            "_$s21flutter_facebook_auth12FacebookAuthC10mainWindow33_0CD7F4A0409F9E3BEE3EA7D01DC1C234LLSo8UIWindowCSgvg",
+            "_$s21flutter_facebook_auth12FacebookAuthC12loginManager13FBSDKLoginKit05LoginG0CvpMV",
+            "_$s21flutter_facebook_auth12FacebookAuthC13pendingResultyypSgcSgvsTq",
+            "_$s21flutter_facebook_auth12FacebookAuthC13pendingResultyypSgcSgvgTq",
+            "_$s21flutter_facebook_auth12FacebookAuthC14getAccessToken33_0CD7F4A0409F9E3BEE3EA7D01DC1C234LL06accessH0SDySSypGSo011FBSDKAccessH0C_tF",
+            "_$s21flutter_facebook_auth12FacebookAuthC13pendingResultyypSgcSgvpWvd",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC6handle_6resultySo0E10MethodCallC_yypSgctFTq",
+            "_$s21flutter_facebook_auth12FacebookAuthC11getUserData33_0CD7F4A0409F9E3BEE3EA7D01DC1C234LL6fields0A6ResultySS_yypSgctF",
+            "_$s21flutter_facebook_auth12FacebookAuthC6handle_6resultySo17FlutterMethodCallC_yypSgctF",
+            "_$s21flutter_facebook_auth12FacebookAuthC17sendErrorToClient33_0CD7F4A0409F9E3BEE3EA7D01DC1C234LL6result9errorCode7messageyyypSgXE_S2StF",
+            "_$s21flutter_facebook_auth12FacebookAuthCMa",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC11application_29didFinishLaunchingWithOptionsSbSo13UIApplicationC_SDys11AnyHashableVypGtF",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC11application_29didFinishLaunchingWithOptionsSbSo13UIApplicationC_SDys11AnyHashableVypGtFTq",
+            "_flutter_facebook_authVersionNumber",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginCACycfc",
+            "_$s21flutter_facebook_auth12FacebookAuthC13pendingResultyypSgcSgvMTq",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC11application_4open7optionsSbSo13UIApplicationC_10Foundation3URLVSDySo0L17OpenURLOptionsKeyaypGtFTq",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC0bG0AA0fG0CvpMV",
+            "_flutter_facebook_authVersionString",
+            "_$s21flutter_facebook_auth12FacebookAuthC13pendingResultyypSgcSgvs",
+            "_$s21flutter_facebook_auth12FacebookAuthC16finishWithResult33_0CD7F4A0409F9E3BEE3EA7D01DC1C234LL4datayypSg_tF",
+            "_$s21flutter_facebook_auth30SwiftFlutterFacebookAuthPluginC6handle_6resultySo0E10MethodCallC_yypSgctF",
+            "_$s21flutter_facebook_auth12FacebookAuthC5login33_0CD7F4A0409F9E3BEE3EA7D01DC1C234LL11permissions0A6ResultySaySSG_yypSgctF",
+            "_$s21flutter_facebook_auth12FacebookAuthC16setPendingResult33_0CD7F4A0409F9E3BEE3EA7D01DC1C234LL10methodName0aH0SbSS_yypSgctF"
+          ],
+          "objc_class": [
+            "FlutterFacebookAuthPlugin",
+            "PodsDummy_flutter_facebook_auth",
+            "_TtC21flutter_facebook_auth12FacebookAuth",
+            "_TtC21flutter_facebook_auth30SwiftFlutterFacebookAuthPlugin"
+          ]
+        }
+      }
+    ],
+    "flags": [
+      {
+        "attributes": [
+          "not_app_extension_safe"
+        ]
+      }
+    ],
+    "install_names": [
+      {
+        "name": "@rpath/flutter_facebook_auth.framework/flutter_facebook_auth"
+      }
+    ],
+    "swift_abi": [
+      {
+        "abi": 7
+      }
+    ],
+    "target_info": [
+      {
+        "min_deployment": "15",
+        "target": "x86_64-ios-simulator"
+      },
+      {
+        "min_deployment": "15",
+        "target": "arm64-ios-simulator"
+      }
+    ]
+  },
+  "tapi_tbd_version": 5
+}
