@@ -8,17 +8,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:912364213375:android:cec3d48aa582e2d88f5b4a",
+        "mobilesdk_app_id": "1:912364213375:android:c01f4e52960b1eff8f5b4a",
         "android_client_info": {
-          "package_name": "asia.ceynet.dsspa"
+          "package_name": "org.sjbdigital.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "912364213375-1an014i4cbgjrj0obfmsv8fg2ukklhei.apps.googleusercontent.com",
+          "client_id": "912364213375-2dum2bqf0r3jn3mb2vn6noleegnavurd.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "asia.ceynet.dsspa",
+            "package_name": "org.sjbdigital.app",
             "certificate_hash": "e66b0797fd7c702e5d5c8080be495ee41e0bbcfc"
           }
         },

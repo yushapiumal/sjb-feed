@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,9 +14,14 @@ import 'package:statelink/screens/old_feed/model/feed_model.dart';
 import 'package:statelink/theme/app_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:statelink/api/sjb_api.dart';
 import 'package:statelink/screens/news_page.dart';
 import 'package:statelink/screens/notifications_page.dart';
 import 'package:statelink/screens/donate_page.dart';
+import 'package:statelink/screens/registration.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:statelink/services/toast_util.dart';
+import 'package:statelink/screens/logn_fb&google.dart';
 
 const _stories = [
   {'label': 'Live', 'asset': 'assets/images/sjb1st.jpg'},
@@ -31,14 +37,34 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
-  late String userId, userName, userEmail, userPhoto;
-  late Timer _timer;
+  late String userName = 'Guest User';
+  String userEmail = '';
+  String userPhoto = '';
+  String userId = 'guest';
+  String userNic = '';
+  String userAddress = '';
+  String userDistrict = '';
+  String userGender = '';
+  String userBirthday = '';
+  String userInstitution = '';
+  String userElectorate = '';
+  String userGnd = '';
+  String userMobile = '';
+  String userWmobile = '';
+  String userSocialFb = '';
+  String userSocialX = '';
+  String userContribute = '';
+  String userReferrer = '';
+  String userCandidate = '';
   String selectedLanguage = 'English';
-  late SharedPreferences prefs;
+  SharedPreferences? prefs;
   int _navIndex = 0;
   bool _navVisible = true;
   double _lastScrollOffset = 0;
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late Timer _timer;
+  bool _showQr = false;
 
   @override
   void initState() {
@@ -70,13 +96,71 @@ class _FeedScreenState extends State<FeedScreen> {
 
   Future<void> _initPrefs() async {
     prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString('member_id') ?? 'guest';
-    selectedLanguage = prefs.getString('language') ?? 'English';
+    // ✅ FIX: Always read the logged-in organizer's member_id from prefs first
+    // and do NOT overwrite it with any newly registered member's data.
+    userId = prefs?.getString('member_id') ?? 'guest';
+    selectedLanguage = prefs?.getString('language') ?? 'English';
+
+    try {
+      final memberId = prefs?.getString('member_id');
+      final token = prefs?.getString('token');
+
+      if (memberId != null && memberId != 'guest') {
+        // Use the Member ID Based API to load the logged-in user's profile
+        final profileData = await ApiService.getUserMemberData(memberId);
+        final profile = profileData['user'];
+
+        if (profile != null) {
+          setState(() {
+            userNic = profile['nic'] ?? '';
+            userAddress = profile['address'] ?? '';
+            userDistrict = profile['district'] ?? '';
+            userGender = profile['gender'] ?? '';
+            userBirthday = profile['bd'] ?? '';
+            userInstitution = profile['lginstitution'] ?? '';
+            userElectorate = profile['electorate'] ?? '';
+            userGnd = profile['gnDivision'] ?? '';
+            userMobile = profile['mobile'] ?? '';
+            userWmobile = profile['wmobile'] ?? '';
+            userEmail = profile['email'] ?? '';
+            userName = profile['fname'] ?? 'Guest User';
+
+            if (profile['social'] != null) {
+              userSocialFb = profile['social']['fb'] ?? '';
+              userSocialX = profile['social']['x'] ?? '';
+            }
+            userContribute = profile['contribute'] ?? '';
+            userReferrer = profile['referrer'] ?? '';
+            userCandidate = profile['candidate']?.toString() ?? 'false';
+          });
+
+          // ✅ FIX: Only save the logged-in user's own data back to prefs.
+          // This must NOT be called after registering another member.
+          await prefs?.setString('fname', userName);
+          await prefs?.setString('email', userEmail);
+          await prefs?.setString('user_data', json.encode(profile));
+        }
+      } else if (token != null && token.isNotEmpty) {
+        // Fallback to legacy profile if token exists but memberId is guest
+        final profile = await ApiService.getUserProfile();
+        final user = profile['user'];
+        if (user != null) {
+          setState(() {
+            userName = user['fname'] ?? userName;
+            userEmail = user['email'] ?? userEmail;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+      ToastUtil.showError('failed_to_load_profile'.tr());
+    }
+
     if (mounted) setState(() {});
   }
 
   Future<void> _saveLanguage(String lang) async {
-    await prefs.setString('language', lang);
+    await prefs?.setString('language', lang);
     Locale newLocale = lang == 'සිංහල'
         ? const Locale('si')
         : lang == 'தமிழ்'
@@ -88,7 +172,7 @@ class _FeedScreenState extends State<FeedScreen> {
   }
 
   Future<void> _logoutUser() async {
-    await prefs.clear();
+    await prefs?.clear();
     final g = GoogleSignIn();
     if (await g.isSignedIn()) await g.signOut();
     await FacebookAuth.instance.logOut();
@@ -162,82 +246,131 @@ class _FeedScreenState extends State<FeedScreen> {
         if (exit == true && context.mounted) Navigator.of(context).pop();
       },
       child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF0F2F5),
         appBar: _buildAppBar(),
         drawer: _buildDrawer(),
-        body: Column(
+        body: Stack(
           children: [
-            AnimatedSlide(
-              offset: _navVisible ? Offset.zero : const Offset(0, -1),
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: AnimatedOpacity(
-                opacity: _navVisible ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 250),
-                child: _buildTopNav(),
-              ),
-            ),
-            Expanded(
-              child: _navIndex == 1
-                  ? const NewsPage()
-                  : _navIndex == 2
-                  ? const DonatePage()
-                  : _navIndex == 3
-                  ? _buildProfilePage()
-                  : Consumer<PostProvider>(
-                      builder: (context, provider, _) {
-                        if (provider.isLoading)
-                          return const Center(
-                            child: CircularProgressIndicator(
+            Column(
+              children: [
+                AnimatedSlide(
+                  offset: _navVisible ? Offset.zero : const Offset(0, -1),
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  child: AnimatedOpacity(
+                    opacity: _navVisible ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 250),
+                    child: _buildTopNav(),
+                  ),
+                ),
+                Expanded(
+                  child: _navIndex == 1
+                      ? const NewsPage()
+                      : _navIndex == 2
+                      ? const DonatePage()
+                      : _navIndex == 3
+                      ? RegistrationForm(registeredByUserId: userId)
+                      : _navIndex == 4
+                      ? _buildProfilePage()
+                      : Consumer<PostProvider>(
+                          builder: (context, provider, _) {
+                            if (provider.isLoading) {
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.accentOrange,
+                                ),
+                              );
+                            }
+                            return RefreshIndicator(
+                              onRefresh: provider.fetchPosts,
                               color: AppColors.accentOrange,
-                            ),
-                          );
-                        return RefreshIndicator(
-                          onRefresh: provider.fetchPosts,
-                          color: AppColors.accentOrange,
-                          child: ListView(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.only(bottom: 20),
-                            children: [
-                              _StoriesRow(),
-                              const SizedBox(height: 6),
-                              if (provider.posts.isEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 60,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      'post_not_available'.tr(),
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.grey[500],
-                                        fontSize: 15,
+                              child: ListView(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.only(bottom: 20),
+                                children: [
+                                  _StoriesRow(),
+                                  const SizedBox(height: 6),
+                                  if (provider.posts.isEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 60,
                                       ),
-                                    ),
-                                  ),
-                                )
-                              else
-                                ...provider.posts.asMap().entries.expand((e) {
-                                  final widgets = <Widget>[
-                                    PostCard(
-                                      key: ValueKey(e.value.postId),
-                                      post: e.value,
-                                      userId: userId,
-                                      userName: userName,
-                                      userPhoto: userPhoto,
-                                      provider: provider,
-                                    ),
-                                  ];
-                                  if (e.key == 0)
-                                    widgets.add(const _PromotedCampaignCard());
-                                  return widgets;
-                                }),
-                            ],
-                          ),
-                        );
-                      },
+                                      child: Center(
+                                        child: Text(
+                                          'post_not_available'.tr(),
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.grey[500],
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    ...provider.posts.asMap().entries.expand((e) {
+                                      final widgets = <Widget>[
+                                        PostCard(
+                                          key: ValueKey(e.value.postId),
+                                          post: e.value,
+                                          userId: userId,
+                                          userName: userName,
+                                          userPhoto: userPhoto,
+                                          provider: provider,
+                                        ),
+                                      ];
+                                      if (e.key == 0) {
+                                        widgets.add(const _PromotedCampaignCard());
+                                      }
+                                      return widgets;
+                                    }),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+            // Centered Arrow Tab to Open Drawer
+            Positioned(
+              left: 0,
+              top: MediaQuery.of(context).size.height * 0.45,
+              child: GestureDetector(
+                onTap: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+                child: Container(
+                  width: 28,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.12),
+                        blurRadius: 8,
+                        offset: const Offset(2, 2),
+                      ),
+                    ],
+                    border: Border(
+                      top: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2), width: 1.5),
+                      right: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2), width: 1.5),
+                      bottom: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2), width: 1.5),
+                    ),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.primaryGreen,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -313,69 +446,112 @@ class _FeedScreenState extends State<FeedScreen> {
             ),
           ),
           // Member ID card
-          Transform.translate(
-            offset: const Offset(0, -32),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x14000000),
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentOrange.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.badge_outlined,
-                      color: AppColors.accentOrange,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Member ID',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        userId,
-                        style: GoogleFonts.inter(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  const Icon(
-                    Icons.verified_user_outlined,
-                    color: AppColors.primaryGreen,
-                    size: 22,
-                  ),
-                ],
-              ),
-            ),
+        GestureDetector(
+  onTap: () => setState(() => _showQr = !_showQr),
+  child: Transform.translate(
+    offset: const Offset(0, -32),
+    child: Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.accentOrange.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.badge_outlined,
+                  color: AppColors.accentOrange,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'member_qr_id'.tr(),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    _showQr ? 'tap_to_hide'.tr() : 'tap_to_show'.tr(),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.primaryGreen,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              AnimatedRotation(
+                turns: _showQr ? 0.5 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 26,
+                ),
+              ),
+            ],
+          ),
+          // ✅ Animated expand/collapse
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Column(
+              children: [
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 10),
+                Text(
+                  'your_qr_code'.tr(),
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                QrImageView(
+                  data: userId,
+                  version: QrVersions.auto,
+                  size: 150.0,
+                  foregroundColor: AppColors.primaryGreen,
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+            crossFadeState: _showQr
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+            sizeCurve: Curves.easeInOut,
+          ),
+        ],
+      ),
+    ),
+  ),
+),
           // Info tiles
           Transform.translate(
             offset: const Offset(0, -24),
@@ -396,19 +572,73 @@ class _FeedScreenState extends State<FeedScreen> {
                 children: [
                   _profileTile(
                     Icons.person_outline_rounded,
-                    'Full Name',
+                    'full_name'.tr(),
                     userName,
                   ),
-                  const Divider(height: 1, indent: 60),
+
+                  _profileTile(
+                    Icons.badge_outlined,
+                    'nic_number'.tr(),
+                    userNic.isNotEmpty ? userNic : '—',
+                  ),
+
+                  _profileTile(
+                    Icons.home_outlined,
+                    'address'.tr(),
+                    userAddress.isNotEmpty ? userAddress : '—',
+                  ),
+
+                  _profileTile(
+                    Icons.location_on_outlined,
+                    'district'.tr(),
+                    userDistrict.isNotEmpty ? userDistrict : '—',
+                  ),
+
+                  _profileTile(
+                    Icons.wc_rounded,
+                    'gender'.tr(),
+                    userGender.isNotEmpty ? userGender : '—',
+                  ),
+
+                  _profileTile(
+                    Icons.cake_outlined,
+                    'birthday'.tr(),
+                    userBirthday.isNotEmpty ? userBirthday : '—',
+                  ),
+
+                  _profileTile(
+                    Icons.how_to_vote_outlined,
+                    'electoral_division'.tr(),
+                    userElectorate.isNotEmpty ? userElectorate : '—',
+                  ),
+
+                  _profileTile(
+                    Icons.location_city_outlined,
+                    'grama_niladhari_division'.tr(),
+                    userGnd.isNotEmpty ? userGnd : '—',
+                  ),
+
+                  _profileTile(
+                    Icons.phone_android_outlined,
+                    'mobile_number'.tr(),
+                    userMobile.isNotEmpty ? userMobile : '—',
+                  ),
+
+                  _profileTile(
+                    Icons.chat_outlined,
+                    'whatsapp_number'.tr(),
+                    userWmobile.isNotEmpty ? userWmobile : '—',
+                  ),
+
                   _profileTile(
                     Icons.email_outlined,
-                    'Email',
+                    'email_address'.tr(),
                     userEmail.isNotEmpty ? userEmail : '—',
                   ),
-                  const Divider(height: 1, indent: 60),
+
                   _profileTile(
                     Icons.language_outlined,
-                    'Language',
+                    'language'.tr(),
                     selectedLanguage,
                   ),
                 ],
@@ -426,7 +656,7 @@ class _FeedScreenState extends State<FeedScreen> {
                   onPressed: _showLogoutDialog,
                   icon: const Icon(Icons.logout, color: Colors.red, size: 20),
                   label: Text(
-                    'Logout',
+                    'logout'.tr(),
                     style: GoogleFonts.inter(
                       color: Colors.red,
                       fontWeight: FontWeight.w600,
@@ -448,14 +678,21 @@ class _FeedScreenState extends State<FeedScreen> {
     );
   }
 
-  Widget _profileTile(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.primaryGreen, size: 22),
-          const SizedBox(width: 16),
-          Column(
+ Widget _profileTile(IconData icon, String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          color: AppColors.primaryGreen,
+          size: 22,
+        ),
+        const SizedBox(width: 16),
+
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -466,8 +703,10 @@ class _FeedScreenState extends State<FeedScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
+              const SizedBox(height: 2),
               Text(
                 value,
+                softWrap: true,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -476,10 +715,11 @@ class _FeedScreenState extends State<FeedScreen> {
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
@@ -491,7 +731,7 @@ class _FeedScreenState extends State<FeedScreen> {
         child: Image.asset('assets/images/lg.png', fit: BoxFit.contain),
       ),
       title: Text(
-        'SJB Sri Lanka',
+        'sjb_feed_lanka'.tr(),
         style: GoogleFonts.inter(
           color: AppColors.primaryGreen,
           fontWeight: FontWeight.w800,
@@ -542,6 +782,15 @@ class _FeedScreenState extends State<FeedScreen> {
             title: Text('home'.tr()),
             onTap: () => Navigator.pop(context),
           ),
+          ListTile(
+            leading: const Icon(Icons.refresh, color: AppColors.primaryGreen),
+            title: Text('refresh_data'.tr()),
+            onTap: () {
+              Navigator.pop(context);
+              _initPrefs();
+              Fluttertoast.showToast(msg: 'refresh_data'.tr());
+            },
+          ),
           ExpansionTile(
             leading: const Icon(Icons.language),
             title: Text('language'.tr()),
@@ -581,11 +830,13 @@ class _FeedScreenState extends State<FeedScreen> {
 
   Widget _buildTopNav() {
     final items = [
-      {'icon': Icons.dynamic_feed_rounded, 'label': 'Feed'},
-      {'icon': Icons.newspaper_rounded, 'label': 'News'},
-      {'icon': Icons.volunteer_activism, 'label': 'Donate'},
-      {'icon': Icons.person_outline_rounded, 'label': 'Profile'},
+      {'icon': Icons.dynamic_feed_rounded, 'label':'feed'.tr()},
+      {'icon': Icons.newspaper_rounded, 'label': 'news'.tr()},
+      {'icon': Icons.volunteer_activism, 'label': 'donate'.tr()},
+      {'icon': Icons.group, 'label': 'community'.tr()},
+      {'icon': Icons.person_outline_rounded, 'label': 'profile'.tr()},
     ];
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -604,7 +855,29 @@ class _FeedScreenState extends State<FeedScreen> {
           final sel = _navIndex == i;
           return Expanded(
             child: InkWell(
-              onTap: () => setState(() => _navIndex = i),
+              onTap: () {
+                if (i == 3) {
+                  // ✅ FIX: Push RegistrationForm and only call _initPrefs()
+                  // when the result is `true` (member was successfully registered).
+                  // This prevents the organizer's own profile from being
+                  // overwritten with the newly registered member's token/data.
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RegistrationForm(
+                        registeredByUserId: userId == 'guest' ? null : userId,
+                      ),
+                    ),
+                  ).then((result) {
+                    // result == true means a new member was successfully registered
+                    if (result == true) {
+                      _initPrefs();
+                    }
+                  });
+                } else {
+                  setState(() => _navIndex = i);
+                }
+              },
               child: Container(
                 decoration: sel
                     ? const BoxDecoration(
@@ -625,13 +898,13 @@ class _FeedScreenState extends State<FeedScreen> {
                       color: sel
                           ? AppColors.primaryGreen
                           : AppColors.textSecondary,
-                      size: 24,
+                      size: 22,
                     ),
                     const SizedBox(height: 3),
                     Text(
                       items[i]['label'] as String,
                       style: GoogleFonts.inter(
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
                         color: sel
                             ? AppColors.primaryGreen
@@ -647,7 +920,43 @@ class _FeedScreenState extends State<FeedScreen> {
       ),
     );
   }
+
+  Widget _buildVerificationFlag() {
+    if (prefs == null) {
+      return const SizedBox.shrink();
+    }
+    final userDataJson = prefs!.getString('user_data');
+    bool isSocial = false;
+    if (userDataJson != null) {
+      try {
+        final decoded = json.decode(userDataJson);
+        if (decoded['googleData'] != null || decoded['facebookData'] != null) {
+          isSocial = true;
+        }
+      } catch (e) {
+        debugPrint('Error decoding user_data: $e');
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: isSocial ? Colors.blue : Colors.grey,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        isSocial ? 'Verified' : 'Not Verified',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
 }
+
+// ─── Stories Row ─────────────────────────────────────────────────────────────
 
 class _StoriesRow extends StatelessWidget {
   @override
@@ -696,8 +1005,11 @@ class _StoriesRow extends StatelessWidget {
   }
 }
 
+// ─── Promoted Campaign Card ───────────────────────────────────────────────────
+
 class _PromotedCampaignCard extends StatelessWidget {
   const _PromotedCampaignCard();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -718,7 +1030,7 @@ class _PromotedCampaignCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.volunteer_activism,
+                    Icons.volunteer_activism_outlined,
                     color: AppColors.accentOrange,
                     size: 22,
                   ),
@@ -843,10 +1155,13 @@ class _PromotedCampaignCard extends StatelessWidget {
   }
 }
 
+// ─── Post Card ────────────────────────────────────────────────────────────────
+
 class PostCard extends StatefulWidget {
   final Feed post;
   final String userId, userName, userPhoto;
   final PostProvider provider;
+
   const PostCard({
     super.key,
     required this.post,
@@ -855,6 +1170,7 @@ class PostCard extends StatefulWidget {
     required this.userPhoto,
     required this.provider,
   });
+
   @override
   State<PostCard> createState() => _PostCardState();
 }
@@ -1262,12 +1578,13 @@ class _PostCardState extends State<PostCard> {
   );
 }
 
-// ─── Facebook-style Comments Bottom Sheet ────────────────────────────────────
+// ─── Comments Bottom Sheet ────────────────────────────────────────────────────
 
 class _CommentsSheet extends StatefulWidget {
   final Feed post;
   final String userId, userName, userPhoto;
   final PostProvider provider;
+
   const _CommentsSheet({
     required this.post,
     required this.userId,
@@ -1275,6 +1592,7 @@ class _CommentsSheet extends StatefulWidget {
     required this.userPhoto,
     required this.provider,
   });
+
   @override
   State<_CommentsSheet> createState() => _CommentsSheetState();
 }
@@ -1299,12 +1617,13 @@ class _CommentsSheetState extends State<_CommentsSheet> {
       await widget.provider.addComment(widget.post, widget.userId, text);
       _ctrl.clear();
       await Future.delayed(const Duration(milliseconds: 100));
-      if (_scroll.hasClients)
+      if (_scroll.hasClients) {
         _scroll.animateTo(
           _scroll.position.maxScrollExtent,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
+      }
     } catch (_) {
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -1326,7 +1645,6 @@ class _CommentsSheetState extends State<_CommentsSheet> {
         ),
         child: Column(
           children: [
-            // Handle bar
             Container(
               margin: const EdgeInsets.only(top: 10, bottom: 8),
               width: 40,
@@ -1336,7 +1654,6 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            // Title
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
               child: Row(
@@ -1362,7 +1679,6 @@ class _CommentsSheetState extends State<_CommentsSheet> {
               ),
             ),
             const Divider(height: 1, color: Color(0xFFF0F2F5)),
-            // Comments list
             Expanded(
               child: comments.isEmpty
                   ? Center(
@@ -1478,7 +1794,6 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                     ),
             ),
             const Divider(height: 1, color: Color(0xFFF0F2F5)),
-            // Input bar
             Padding(
               padding: EdgeInsets.fromLTRB(
                 12,

@@ -64,20 +64,18 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
 
   Future<void> _checkLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
-    final logged = prefs.getBool('is_logged_in') ?? false;
-    if (logged) {
-      final userJson = prefs.getString('user_data');
-      Map<String, dynamic> userData = {};
-      if (userJson != null) {
-        try {
-          userData = jsonDecode(userJson) as Map<String, dynamic>;
-        } catch (_) {}
-      }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/home', extra: userData);
-      });
-      return;
+    final userJson = prefs.getString('user_data');
+    if (userJson != null) {
+      try {
+        final data = jsonDecode(userJson) as Map<String, dynamic>;
+        setState(() {
+          _googleUserData = data['googleData'];
+          _fbUserData = data['facebookData'];
+          // Also set other user info if needed
+        });
+      } catch (_) {}
     }
+    
     if (mounted) {
       setState(() {
         _checkingLogin = false;
@@ -89,6 +87,9 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_logged_in', true);
     await prefs.setString('user_data', jsonEncode(userData));
+    // Also save separate fields for quick access in FeedScreen
+    if (userData['name'] != null) await prefs.setString('fname', userData['name']);
+    if (userData['email'] != null) await prefs.setString('email', userData['email']);
   }
 
   Future<void> _signInWithGoogle() async {
@@ -123,8 +124,6 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
         _fbUserData = null;
       });
 
-      _showSnack("Signed in with Google");
-
       final Map<String, dynamic> userData = {
         "firebaseUid": _firebaseUser?.uid,
         "name": data["name"] ?? _firebaseUser?.displayName,
@@ -135,14 +134,12 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
       };
 
       await _saveUserToPrefs(userData);
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/home', extra: userData);
-      });
+      _showSnack("Connected to Google");
+      setState(() {});
     } catch (e) {
       _showSnack("Google login failed: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -165,7 +162,7 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
           _googleUserData = null;
         });
 
-        _showSnack("Signed in with Facebook");
+        _showSnack("Connected to Facebook");
 
         final String? photoUrl = (fbData["picture"] is Map &&
                 fbData["picture"]["data"] != null &&
@@ -181,9 +178,7 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
           "googleData": _googleUserData,
         };
         await _saveUserToPrefs(userData);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.go('/home', extra: userData);
-        });
+        setState(() {});
       } else if (result.status == LoginStatus.cancelled) {
         _showSnack("Facebook login cancelled");
       } else {
@@ -192,11 +187,12 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
     } catch (e) {
       _showSnack("Facebook login failed: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showSnack(String msg) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
@@ -225,7 +221,7 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
                   child: CircularProgressIndicator(color: AppColors.accentOrange),
                 ),
               )
-            : (_firebaseUser == null ? _buildLoginUI() : _buildProfile()),
+            : _buildLoginUI(),
       ),
     );
   }
@@ -275,7 +271,7 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
             ),
           ),
 
-          // Gift animation in upper area
+          // Logo/Gif area
           Positioned(
             top: MediaQuery.of(context).size.height * 0.12,
             left: 0,
@@ -293,7 +289,7 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
             ),
           ),
 
-          // Bottom login card
+          // Bottom card
           Align(
             alignment: Alignment.bottomCenter,
             child: FadeTransition(
@@ -320,9 +316,8 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
                         children: [
                           const SizedBox(height: 8),
 
-                          // Title
                           Text(
-                            "Get Started",
+                            "Connect Social",
                             style: GoogleFonts.inter(
                               fontSize: 28,
                               fontWeight: FontWeight.w800,
@@ -334,7 +329,7 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
                           const SizedBox(height: 10),
 
                           Text(
-                            "Join us as we work towards a smarter, fairer, and more connected Sri Lanka.",
+                            "Link your social accounts to enhance your experience and stay connected.",
                             style: GoogleFonts.inter(
                               fontSize: 15,
                               color: AppColors.textSecondary,
@@ -348,11 +343,14 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
                           _socialButton(
                             onTap: _signInWithGoogle,
                             icon: 'assets/images/google.webp',
-                            text: 'Sign in with Google',
+                            text: _googleUserData != null ? 'Connected to Google' : 'Connect Google',
                             bgColor: Colors.white,
                             textColor: AppColors.textPrimary,
                             borderColor: const Color(0xFFE4E6EB),
                             iconPadding: 16,
+                            isConnected: _googleUserData != null,
+                            accountName: _googleUserData?['name'],
+                            photoUrl: _googleUserData?['picture'],
                           ),
 
                           const SizedBox(height: 16),
@@ -361,43 +359,32 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
                           _socialButton(
                             onTap: _signInWithFacebook,
                             icon: 'assets/images/fb.png',
-                            text: 'Sign in with Facebook',
+                            text: _fbUserData != null ? 'Connected to Facebook' : 'Connect Facebook',
                             bgColor: const Color(0xFF1877F2),
                             textColor: Colors.white,
                             borderColor: const Color(0xFF1877F2),
                             iconPadding: 8,
+                            isConnected: _fbUserData != null,
+                            accountName: _fbUserData?['name'],
+                            photoUrl: (_fbUserData?["picture"] is Map &&
+                                    _fbUserData?["picture"]["data"] != null &&
+                                    _fbUserData?["picture"]["data"]["url"] != null)
+                                ? _fbUserData!["picture"]["data"]["url"]
+                                : null,
                           ),
 
                           const SizedBox(height: 24),
 
-                          // Divider with text
-                          Row(
-                            children: [
-                              Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text(
-                                  "or",
-                                  style: GoogleFonts.inter(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              Expanded(child: Divider(color: Colors.grey[300], thickness: 1)),
-                            ],
-                          ),
-
-                          const SizedBox(height: 20),
-
+                          // Back button
                           Center(
-                            child: Text(
-                              "Continue with your social account\nto access the feed",
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                                height: 1.5,
+                            child: TextButton(
+                              onPressed: () => context.pop(),
+                              child: Text(
+                                "Back to Feed",
+                                style: GoogleFonts.inter(
+                                  color: AppColors.primaryGreen,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
@@ -422,18 +409,22 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
     required Color textColor,
     required Color borderColor,
     required double iconPadding,
+    bool isConnected = false,
+    String? accountName,
+    String? photoUrl,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: isConnected ? null : onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor, width: 1.5),
+          border: Border.all(
+            color: isConnected ? Colors.green : borderColor,
+            width: 2.0,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -443,181 +434,51 @@ class _SocialLoginPageState extends State<SocialLoginPage> with SingleTickerProv
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: EdgeInsets.only(right: iconPadding),
-              child: Image.asset(icon, height: 24),
-            ),
-            Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: textColor,
+            if (photoUrl != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: CircleAvatar(
+                  radius: 14,
+                  backgroundImage: NetworkImage(photoUrl),
+                ),
+              )
+            else
+              Padding(
+                padding: EdgeInsets.only(right: iconPadding),
+                child: Image.asset(icon, height: 24),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfile() {
-    final data = _googleUserData ?? _fbUserData ?? {};
-
-    final dynamic picture = data["picture"];
-
-    String photoUrl;
-
-    if (picture is Map && picture["data"] != null && picture["data"]["url"] != null) {
-      photoUrl = picture["data"]["url"];
-    } else if (picture is String) {
-      photoUrl = picture;
-    } else {
-      photoUrl = _firebaseUser?.photoURL ?? "https://via.placeholder.com/150";
-    }
-
-    String? locationName;
-    if (data["location"] != null) {
-      if (data["location"] is Map && data["location"]["name"] != null) {
-        locationName = data["location"]["name"];
-      } else if (data["location"] is String) {
-        locationName = data["location"];
-      }
-    }
-
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.primaryGreen,
-              AppColors.secondaryGreen,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+            Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Profile avatar
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.accentOrange, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 55,
-                      backgroundImage: NetworkImage(photoUrl),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
                   Text(
-                    data["name"] ?? _firebaseUser?.displayName ?? "User",
-                    style: GoogleFonts.inter(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-                  Text(
-                    data["email"] ?? _firebaseUser?.email ?? "",
+                    text,
                     style: GoogleFonts.inter(
                       fontSize: 15,
-                      color: Colors.white.withOpacity(0.8),
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
                     ),
                   ),
-
-                  if (data["gender"] != null) ...[
-                    const SizedBox(height: 8),
-                    Text("Gender: ${data["gender"]}", style: TextStyle(color: Colors.white70)),
-                  ],
-
-                  if (data["birthday"] != null) ...[
-                    const SizedBox(height: 8),
-                    Text("Birthday: ${data["birthday"]}", style: TextStyle(color: Colors.white70)),
-                  ],
-
-                  if (locationName != null) ...[
-                    const SizedBox(height: 8),
-                    Text("Location: $locationName", style: TextStyle(color: Colors.white70)),
-                  ],
-
-                  const SizedBox(height: 36),
-
-                  // Go to Feed Button
-                  GestureDetector(
-                    onTap: () async {
-                      final Map<String, dynamic> userData = {
-                        "firebaseUid": _firebaseUser?.uid,
-                        "name": data["name"] ?? _firebaseUser?.displayName,
-                        "email": data["email"] ?? _firebaseUser?.email,
-                        "photoUrl": photoUrl,
-                        "gender": data["gender"],
-                        "birthday": data["birthday"],
-                        "location": locationName,
-                        "googleData": _googleUserData,
-                        "facebookData": _fbUserData,
-                      };
-
-                      setState(() => _isLoading = true);
-                      try {
-                        await _saveUserToPrefs(userData);
-                        if (!mounted) return;
-                        context.go('/home', extra: userData);
-                      } catch (e) {
-                        _showSnack("Failed to proceed: $e");
-                      } finally {
-                        if (mounted) setState(() => _isLoading = false);
-                      }
-                    },
-                    child: Container(
-                      width: 240,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.accentOrange, Color(0xFFE09800)],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accentOrange.withOpacity(0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Go to Feed",
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
+                  if (isConnected && accountName != null)
+                    Text(
+                      accountName,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: textColor.withOpacity(0.8),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
-          ),
+            if (isConnected)
+              const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 24,
+              ),
+          ],
         ),
       ),
     );

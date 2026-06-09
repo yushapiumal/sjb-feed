@@ -1,4 +1,4 @@
-package asia.ceynet.dsspa
+package org.sjbdigital.app
 
 import io.flutter.embedding.android.FlutterActivity
 

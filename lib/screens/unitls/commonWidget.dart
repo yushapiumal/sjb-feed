@@ -13,6 +13,8 @@ class CustomTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final int maxLines;
   final List<TextInputFormatter>? inputFormatters;
+  final bool enabled;
+  final TextInputType? keyboardType;
 
   const CustomTextField({
     super.key,
@@ -22,6 +24,8 @@ class CustomTextField extends StatefulWidget {
     this.validator,
     this.maxLines = 1,
     this.inputFormatters,
+    this.enabled = true,
+    this.keyboardType,
   });
 
   @override
@@ -34,12 +38,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      enabled: widget.enabled,
+      keyboardType: widget.keyboardType,
       obscureText: widget.isPassword ? _obscureText : false,
       controller: widget.controller,
       maxLines: widget.maxLines,
       inputFormatters: widget.inputFormatters,
       style: GoogleFonts.inter(
-        color: AppColors.textPrimary,
+        color: widget.enabled ? AppColors.textPrimary : AppColors.textSecondary,
         fontSize: 14,
         fontWeight: FontWeight.w500,
       ),
@@ -52,7 +58,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           fontWeight: FontWeight.w500,
         ),
         filled: true,
-        fillColor: AppColors.backgroundLight,
+        fillColor: widget.enabled ? AppColors.backgroundLight : Colors.grey.shade100,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: Colors.grey.shade300),
