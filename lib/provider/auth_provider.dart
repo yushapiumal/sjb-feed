@@ -47,25 +47,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Future<String> createGroup(String name, String description) async {
-  //   final groupId = await _authService.createGroup(name, description, _user!.uid);
-  //   _groups = await _authService.getUserGroups(_user!.uid);
-  //   notifyListeners();
-  //   return groupId;
-  // }
-
-  // Future<void> joinGroup(String groupId) async {
-  //   await _authService.joinGroup(groupId, _user!.uid);
-  //   _groups = await _authService.getUserGroups(_user!.uid);
-  //   notifyListeners();
-  // }
-
-  // Future<void> addUserToGroup(String groupId, String userEmail) async {
-  //   await _authService.addUserToGroup(groupId, userEmail, _user!.uid);
-  //   _groups = await _authService.getUserGroups(_user!.uid);
-  //   notifyListeners();
-  // }
-
   Future<bool> isGroupAdmin(String groupId) async {
     return await _authService.isGroupAdmin(groupId, _user!.uid);
   }

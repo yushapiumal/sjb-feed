@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:statelink/api/route.dart';
-import 'package:statelink/screens/old_feed/auth_provider.dart';
+
 import 'package:statelink/provider/feed_provider.dart';
+import 'package:statelink/provider/auth_provider.dart';
 import 'package:statelink/screens/splashScreen.dart';
 import 'package:statelink/services/notification_service.dart';
 import 'package:statelink/theme/app_theme.dart';

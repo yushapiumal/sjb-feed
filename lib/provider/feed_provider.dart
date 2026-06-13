@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:statelink/screens/old_feed/model/feed_model.dart';
+import 'package:statelink/models/feed_model.dart';
 
 class PostProvider with ChangeNotifier {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;

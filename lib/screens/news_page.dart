@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:statelink/theme/app_theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NewsPage extends StatefulWidget {
   const NewsPage({super.key});
@@ -21,15 +22,23 @@ class _NewsPageState extends State<NewsPage> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchNews() async {
-    final snap = await _db
-        .collection('news')
-        .orderBy('publishAt', descending: true)
-        .get();
-    return snap.docs.map((d) {
+    final snap = await _db.collection('news').get();
+    final list = snap.docs.map((d) {
       final data = d.data();
       data['id'] = d.id;
       return data;
     }).toList();
+
+    list.sort((a, b) {
+      final tsA = a['publishAt'] ?? a['puplishAt'];
+      final tsB = b['publishAt'] ?? b['puplishAt'];
+      if (tsA == null && tsB == null) return 0;
+      if (tsA == null) return 1;
+      if (tsB == null) return -1;
+      return (tsB as Timestamp).compareTo(tsA as Timestamp);
+    });
+
+    return list;
   }
 
   String _timeAgo(dynamic ts) {
@@ -113,13 +122,27 @@ class _NewsCard extends StatefulWidget {
 class _NewsCardState extends State<_NewsCard> {
   bool _expanded = false;
 
+  Future<void> _launchURL(String urlString) async {
+    if (urlString.isEmpty) return;
+    final uri = Uri.tryParse(urlString);
+    if (uri != null) {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        debugPrint('Could not launch $urlString');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String title = widget.item['title'] ?? 'Untitled';
     final String body = widget.item['body'] ?? widget.item['description'] ?? '';
     final String imageUrl = widget.item['imageUrl'] ?? '';
     final String category = widget.item['category'] ?? 'News';
-    final String time = widget.timeAgo(widget.item['publishAt']);
+    final String time = widget.timeAgo(widget.item['publishAt'] ?? widget.item['puplishAt']);
+    final String url = widget.item['url'] ?? widget.item['link'] ?? '';
+    final String type = widget.item['type'] ?? 'news';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -138,23 +161,120 @@ class _NewsCardState extends State<_NewsCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (imageUrl.isNotEmpty)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
+            GestureDetector(
+              onTap: url.isNotEmpty ? () => _launchURL(url) : null,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    child: Image.network(
+                      imageUrl,
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 180,
+                        color: const Color(0xFFF0F2F5),
+                        child: const Icon(
+                          Icons.broken_image_outlined,
+                          color: Colors.grey,
+                          size: 48,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (type == 'video' || url.contains('video') || url.contains('reel'))
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.play_arrow_rounded,
+                        color: Colors.white,
+                        size: 36,
+                      ),
+                    ),
+                ],
               ),
-              child: Image.network(
-                imageUrl,
+            )
+          else if (url.isNotEmpty)
+            GestureDetector(
+              onTap: () => _launchURL(url),
+              child: Container(
                 height: 180,
                 width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 180,
-                  color: const Color(0xFFF0F2F5),
-                  child: const Icon(
-                    Icons.broken_image_outlined,
-                    color: Colors.grey,
-                    size: 48,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1877F2), Color(0xFF0D47A1)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned(
+                      top: 14,
+                      right: 14,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.link, color: Colors.white70, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            category.toUpperCase(),
+                            style: GoogleFonts.inter(
+                              color: Colors.white70,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.play_arrow_rounded,
+                            color: Color(0xFF1877F2),
+                            size: 40,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Watch Video',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -184,13 +304,14 @@ class _NewsCardState extends State<_NewsCard> {
                       ),
                     ),
                     const Spacer(),
-                    Text(
-                      time,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
+                    if (time.isNotEmpty)
+                      Text(
+                        time,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
