@@ -12,6 +12,7 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: org.sjbdigital.app
+        create_profiles: true
       flutter: stable
       xcode: latest
       cocoapods: default
