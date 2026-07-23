@@ -47,12 +47,10 @@ workflows:
         script: |
           cd ios
           pod install
-      - name: Build Flutter Release & Package IPA
+      - name: Build iOS IPA
         script: |
-          flutter build ios --release --no-codesign
-          xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild.log
