@@ -33,7 +33,7 @@ workflows:
           keychain initialize
           app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
           keychain add-certificates
-          xcode-project use-profiles --warn-only
+          xcode-project use-profiles
       - name: Disable Swift Package Manager & Get Flutter Dependencies
         script: |
           flutter config --no-enable-swift-package-manager
@@ -49,8 +49,7 @@ workflows:
         script: |
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME" \
-            --archive-flags="CODE_SIGN_IDENTITY='Apple Distribution' DEVELOPMENT_TEAM='6KNYJ8DLZ4' PROVISIONING_PROFILE_SPECIFIER='$CM_PROVISIONING_PROFILE'"
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild.log
