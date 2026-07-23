@@ -96,6 +96,10 @@
 	<string>$(PRODUCT_NAME) needs microphone access to record audio messages.</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>$(PRODUCT_NAME) sends notifications to keep you updated on the latest news and activity.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs access to your location to show location-based news and updates.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>$(PRODUCT_NAME) needs location access to provide location-based services.</string>
 
 	<!-- Background modes for Firebase Messaging -->
 	<key>UIBackgroundModes</key>

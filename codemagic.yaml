@@ -1,0 +1,101 @@
+# Codemagic CI/CD configuration for Statelink Flutter iOS Application
+# Documentation: https://docs.codemagic.io/yaml-basic-configuration/yaml-getting-started/
+
+workflows:
+  ios-release:
+    name: Flutter iOS Release (Signed IPA)
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      groups:
+        # Define 'app_store_credentials' in Codemagic UI with:
+        # - APP_STORE_CONNECT_ISSUER_ID
+        # - APP_STORE_CONNECT_KEY_IDENTIFIER
+        # - APP_STORE_CONNECT_PRIVATE_KEY
+        # - CERTIFICATE_PRIVATE_KEY (optional if Codemagic generates it)
+        - app_store_credentials
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "org.sjbdigital.app"
+        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
+        XCODE_SCHEME: "Runner"
+    triggering:
+      events:
+        - push
+        - tag
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
+        - pattern: 'master'
+          include: true
+          source: true
+    scripts:
+      - name: Initialize Keychain and Fetch Signing Files
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Get Flutter Dependencies
+        script: |
+          flutter pub get
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install
+      - name: Build iOS IPA
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild.log
+      - build/ios/archive/*.xcarchive
+    publishing:
+      email:
+        recipients:
+          - developer@statelink.com # Replace with your email address
+        notify:
+          success: true
+          failure: true
+
+  ios-unsigned:
+    name: Flutter iOS Unsigned Build (Testing & Verification)
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - pull_request
+      branch_patterns:
+        - pattern: '*'
+          include: true
+          source: true
+    scripts:
+      - name: Get Flutter Dependencies
+        script: |
+          flutter pub get
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod install
+      - name: Build iOS App (Unsigned)
+        script: |
+          flutter build ios --release --no-codesign
+      - name: Package Unsigned Payload as IPA
+        script: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r Statelink_Unsigned.ipa Payload
+    artifacts:
+      - build/ios/iphoneos/Statelink_Unsigned.ipa
+      - build/ios/iphoneos/*.app
+      - /tmp/xcodebuild.log
+      - build/ios/archive/*.xcarchive
