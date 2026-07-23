@@ -8,12 +8,10 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       groups:
-        # Define 'app_store_credentials' in Codemagic UI with:
-        # - APP_STORE_CONNECT_ISSUER_ID
-        # - APP_STORE_CONNECT_KEY_IDENTIFIER
-        # - APP_STORE_CONNECT_PRIVATE_KEY
-        # - CERTIFICATE_PRIVATE_KEY (optional if Codemagic generates it)
         - app_store_credentials
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: org.sjbdigital.app
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -33,13 +31,6 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: Initialize Keychain and Fetch Signing Files
-        script: |
-          keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_DEVELOPMENT --create
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
-          keychain add-certificates
-          xcode-project use-profiles
       - name: Disable Swift Package Manager & Get Flutter Dependencies
         script: |
           flutter config --no-enable-swift-package-manager
@@ -48,14 +39,10 @@ workflows:
         script: |
           cd ios
           pod install
-      - name: Build Flutter Release
+      - name: Build iOS IPA
         script: |
-          flutter build ios --release --no-codesign
-      - name: Package & Sign IPA
-        script: |
-          xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild.log
@@ -63,7 +50,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - developer@statelink.com # Replace with your email address
+          - developer@statelink.com
         notify:
           success: true
           failure: true
