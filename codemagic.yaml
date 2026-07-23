@@ -39,8 +39,9 @@ workflows:
           app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
           keychain add-certificates
           xcode-project use-profiles
-      - name: Get Flutter Dependencies
+      - name: Disable Swift Package Manager & Get Flutter Dependencies
         script: |
+          flutter config --no-enable-swift-package-manager
           flutter pub get
       - name: Install CocoaPods
         script: |
@@ -78,8 +79,9 @@ workflows:
           include: true
           source: true
     scripts:
-      - name: Get Flutter Dependencies
+      - name: Disable Swift Package Manager & Get Flutter Dependencies
         script: |
+          flutter config --no-enable-swift-package-manager
           flutter pub get
       - name: Install CocoaPods
         script: |
