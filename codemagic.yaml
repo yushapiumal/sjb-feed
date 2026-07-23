@@ -9,10 +9,6 @@ workflows:
     environment:
       groups:
         - app_store_credentials
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: org.sjbdigital.app
-        create_profiles: true
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -32,6 +28,12 @@ workflows:
           include: true
           source: true
     scripts:
+      - name: Initialize Keychain and Fetch/Create Signing Files
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Disable Swift Package Manager & Get Flutter Dependencies
         script: |
           flutter config --no-enable-swift-package-manager
