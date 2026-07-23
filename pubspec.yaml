@@ -37,7 +37,7 @@ dependencies:
   firebase_core: ^4.1.0
   firebase_messaging: ^16.0.1
   provider: ^6.1.5+1
-  google_fonts: 5.1.0
+  google_fonts: ^6.2.1
   any_link_preview: ^3.0.3
   cloud_firestore: ^6.0.1
   flutter_animate: ^4.5.2
