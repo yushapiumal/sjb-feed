@@ -73,6 +73,24 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black12,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Notifications',
+          style: GoogleFonts.inter(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
+        centerTitle: false,
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _notifStream(),
         builder: (context, snapshot) {
