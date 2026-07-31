@@ -62,6 +62,7 @@ Thumbs.db
 *.log
 *.lock
 *.swp
+*.pem
 
 # =========================
 # Misc Flutter artifacts
