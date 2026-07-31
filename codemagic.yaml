@@ -43,9 +43,19 @@ workflows:
             # Reconstruct PEM file if headers/footers are missing from copy-pasting
             if [[ ! "$CERTIFICATE_PRIVATE_KEY" =~ "-----BEGIN" ]]; then
               echo "Formatting CERTIFICATE_PRIVATE_KEY (adding missing PEM headers)..."
-              echo "-----BEGIN RSA PRIVATE KEY-----" > /tmp/cert_private_key.pem
-              echo "$CERTIFICATE_PRIVATE_KEY" >> /tmp/cert_private_key.pem
-              echo "-----END RSA PRIVATE KEY-----" >> /tmp/cert_private_key.pem
+              # Auto-detect PKCS#1 vs PKCS#8 based on key prefix
+              CLEAN_KEY=$(echo "$CERTIFICATE_PRIVATE_KEY" | tr -d '\n\r ')
+              if [[ "$CLEAN_KEY" =~ ^MIIEv ]]; then
+                echo "Detected PKCS#8 format key."
+                echo "-----BEGIN PRIVATE KEY-----" > /tmp/cert_private_key.pem
+                echo "$CERTIFICATE_PRIVATE_KEY" >> /tmp/cert_private_key.pem
+                echo "-----END PRIVATE KEY-----" >> /tmp/cert_private_key.pem
+              else
+                echo "Detected PKCS#1 RSA format key."
+                echo "-----BEGIN RSA PRIVATE KEY-----" > /tmp/cert_private_key.pem
+                echo "$CERTIFICATE_PRIVATE_KEY" >> /tmp/cert_private_key.pem
+                echo "-----END RSA PRIVATE KEY-----" >> /tmp/cert_private_key.pem
+              fi
             else
               echo "CERTIFICATE_PRIVATE_KEY already contains PEM headers."
               echo "$CERTIFICATE_PRIVATE_KEY" > /tmp/cert_private_key.pem
