@@ -40,6 +40,11 @@ workflows:
             echo "==========================================================================================="
             exit 1
           else
+            echo "--- DEBUG INFO (Non-sensitive) ---"
+            echo "Line count: $(echo "$CERTIFICATE_PRIVATE_KEY" | wc -l)"
+            echo "Byte count: $(echo "$CERTIFICATE_PRIVATE_KEY" | wc -c)"
+            echo "First 15 characters: $(echo "$CERTIFICATE_PRIVATE_KEY" | cut -c 1-15)"
+            echo "----------------------------------"
             app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create --certificate-key=@env:CERTIFICATE_PRIVATE_KEY
           fi
           keychain add-certificates
