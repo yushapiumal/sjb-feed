@@ -31,7 +31,17 @@ workflows:
       - name: Initialize Keychain and Fetch/Create Signing Files
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create --certificate-key=@env:CERTIFICATE_PRIVATE_KEY
+          if [ -z "$CERTIFICATE_PRIVATE_KEY" ]; then
+            echo "========================================== ERROR =========================================="
+            echo "Environment variable CERTIFICATE_PRIVATE_KEY is not defined."
+            echo "To use automatic signing, please add CERTIFICATE_PRIVATE_KEY (the RSA 2048-bit private key"
+            echo "of your iOS Distribution Certificate) to the 'app_store_credentials' variable group"
+            echo "in your Codemagic environment settings."
+            echo "==========================================================================================="
+            exit 1
+          else
+            app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create --certificate-key=@env:CERTIFICATE_PRIVATE_KEY
+          fi
           keychain add-certificates
       - name: Disable Swift Package Manager & Get Flutter Dependencies
         script: |
