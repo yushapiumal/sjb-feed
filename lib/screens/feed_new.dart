@@ -23,6 +23,10 @@ import 'package:statelink/services/toast_util.dart';
 import 'package:statelink/screens/feed_tab.dart';
 import 'package:statelink/screens/profile_page.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class FeedScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
   const FeedScreen({super.key, required this.userData});
@@ -58,6 +62,148 @@ class _FeedScreenState extends State<FeedScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late Timer _timer;
+
+  // Dynamic Navigation & WebView Configurations
+  String hostedFeedUrl = 'https://statelink-web-feed.web.app/#/web-feed'; // fallback default
+  WebViewController? _webViewController;
+  List<Map<String, dynamic>> topNavItems = [];
+  List<Map<String, dynamic>> drawerItems = [];
+  bool isConfigLoading = true;
+
+  final List<Map<String, dynamic>> defaultTopNavItems = [
+    {'icon': 'dynamic_feed', 'label_en': 'Feed', 'label_si': 'පුවත්', 'label_ta': 'ஊட்டம்', 'action_index': 0},
+    {'icon': 'newspaper', 'label_en': 'News', 'label_si': 'පුවත්පත්', 'label_ta': 'செய்திகள்', 'action_index': 1},
+    {'icon': 'volunteer_activism', 'label_en': 'Donate', 'label_si': 'ආධාර', 'label_ta': 'நன்கொடை', 'action_index': 2},
+    {'icon': 'group', 'label_en': 'Community', 'label_si': 'සමූහය', 'label_ta': 'சமூகம்', 'action_index': 3},
+    {'icon': 'person', 'label_en': 'Profile', 'label_si': 'ගිණුම', 'label_ta': 'சுයවිவரம்', 'action_index': 4},
+  ];
+
+  final List<Map<String, dynamic>> defaultDrawerItems = [
+    {'icon': 'home', 'title_en': 'Home', 'title_si': 'මුල් පිටුව', 'title_ta': 'முகப்பு', 'action': 'home'},
+    {'icon': 'refresh', 'title_en': 'Refresh Data', 'title_si': 'යාවත්කාලීන කරන්න', 'title_ta': 'தரவை புதுப்பி', 'action': 'refresh'},
+    {'icon': 'language', 'title_en': 'Language', 'title_si': 'භාෂාව', 'title_ta': 'மொழி', 'action': 'language'},
+    {'icon': 'settings', 'title_en': 'Settings', 'title_si': 'සැකසුම්', 'title_ta': 'அமைப்புகள்', 'action': 'settings'},
+    {'icon': 'logout', 'title_en': 'Logout', 'title_si': 'පිටවීම', 'title_ta': 'வெளியேறு', 'action': 'logout'},
+  ];
+
+  IconData getIconFromString(String iconName) {
+    switch (iconName) {
+      case 'dynamic_feed':
+        return Icons.dynamic_feed_rounded;
+      case 'newspaper':
+        return Icons.newspaper_rounded;
+      case 'volunteer_activism':
+        return Icons.volunteer_activism;
+      case 'group':
+        return Icons.group;
+      case 'person':
+        return Icons.person_outline_rounded;
+      case 'home':
+        return Icons.home;
+      case 'refresh':
+        return Icons.refresh;
+      case 'language':
+        return Icons.language;
+      case 'settings':
+        return Icons.settings;
+      case 'logout':
+        return Icons.logout;
+      case 'help':
+        return Icons.help;
+      case 'info':
+        return Icons.info;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  String getLocalizedLabel(Map<String, dynamic> item) {
+    final labelKey = item['label_key'] ?? item['title_key'];
+    if (labelKey != null && labelKey.toString().isNotEmpty) {
+      return labelKey.toString().tr();
+    }
+    final langCode = context.locale.languageCode;
+    final localized = item['label_$langCode'] ?? item['title_$langCode'];
+    if (localized != null && localized.toString().isNotEmpty) {
+      return localized.toString();
+    }
+    final defaultLabel = item['label_en'] ?? item['title_en'] ?? item['label'] ?? item['title'] ?? '';
+    return defaultLabel.toString();
+  }
+
+  Future<void> _fetchAppConfig() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('app_config')
+          .doc('navigation')
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        setState(() {
+          hostedFeedUrl = data['hosted_feed_url'] ?? hostedFeedUrl;
+          if (data['top_nav_items'] != null) {
+            topNavItems = List<Map<String, dynamic>>.from(data['top_nav_items']);
+          } else {
+            topNavItems = defaultTopNavItems;
+          }
+          if (data['drawer_items'] != null) {
+            drawerItems = List<Map<String, dynamic>>.from(data['drawer_items']);
+          } else {
+            drawerItems = defaultDrawerItems;
+          }
+          isConfigLoading = false;
+        });
+      } else {
+        _setFallbackConfig();
+      }
+    } catch (e) {
+      debugPrint("Error fetching app config: $e");
+      _setFallbackConfig();
+    }
+    _initWebViewController();
+  }
+
+  void _setFallbackConfig() {
+    setState(() {
+      topNavItems = defaultTopNavItems;
+      drawerItems = defaultDrawerItems;
+      isConfigLoading = false;
+    });
+  }
+
+  void _initWebViewController() {
+    if (kIsWeb) return;
+    
+    String url = hostedFeedUrl;
+    final queryStr = 'userId=${Uri.encodeComponent(userId)}&userName=${Uri.encodeComponent(userName)}&userPhoto=${Uri.encodeComponent(userPhoto)}';
+    if (url.contains('?')) {
+      url = '$url&$queryStr';
+    } else {
+      url = '$url?$queryStr';
+    }
+
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0xFFF0F2F5))
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            debugPrint("WebView loading progress: $progress%");
+          },
+          onPageStarted: (String url) {
+            debugPrint("WebView page started loading: $url");
+          },
+          onPageFinished: (String url) {
+            debugPrint("WebView page finished loading: $url");
+          },
+          onWebResourceError: (WebResourceError error) {
+            debugPrint("WebView resource error: ${error.description}");
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(url));
+  }
 
   @override
   void initState() {
@@ -150,6 +296,7 @@ class _FeedScreenState extends State<FeedScreen> {
     }
 
     if (mounted) setState(() {});
+    await _fetchAppConfig();
   }
 
   Future<void> _saveLanguage(String lang) async {
@@ -258,7 +405,13 @@ class _FeedScreenState extends State<FeedScreen> {
                   ),
                 ),
                 Expanded(
-                  child: _navIndex == 1
+                  child: isConfigLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.accentOrange,
+                          ),
+                        )
+                      : _navIndex == 1
                       ? const NewsPage()
                       : _navIndex == 2
                       ? const DonatePage()
@@ -282,12 +435,14 @@ class _FeedScreenState extends State<FeedScreen> {
                           selectedLanguage: selectedLanguage,
                           onLogout: _showLogoutDialog,
                         )
-                      : FeedTab(
-                          userId: userId,
-                          userName: userName,
-                          userPhoto: userPhoto,
-                          scrollController: _scrollController,
-                        ),
+                      : (!kIsWeb && _webViewController != null)
+                          ? WebViewWidget(controller: _webViewController!)
+                          : FeedTab(
+                              userId: userId,
+                              userName: userName,
+                              userPhoto: userPhoto,
+                              scrollController: _scrollController,
+                            ),
                 ),
               ],
             ),
@@ -394,65 +549,74 @@ class _FeedScreenState extends State<FeedScreen> {
             ),
             decoration: const BoxDecoration(color: AppColors.primaryGreen),
           ),
-          ListTile(
-            leading: const Icon(Icons.home),
-            title: Text('home'.tr()),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.refresh, color: AppColors.primaryGreen),
-            title: Text('refresh_data'.tr()),
-            onTap: () {
-              Navigator.pop(context);
-              _initPrefs();
-              Fluttertoast.showToast(msg: 'refresh_data'.tr());
-            },
-          ),
-          ExpansionTile(
-            leading: const Icon(Icons.language),
-            title: Text('language'.tr()),
-            children: ['English', 'සිංහල', 'தமிழ்']
-                .map(
-                  (lang) => ListTile(
-                    title: Text(lang),
-                    trailing: selectedLanguage == lang
-                        ? const Icon(Icons.check, color: AppColors.primaryGreen)
-                        : null,
-                    onTap: () {
-                      _saveLanguage(lang);
-                      Navigator.pop(context);
-                    },
-                  ),
-                )
-                .toList(),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: Text('settings'.tr()),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: Text(
-              'logout'.tr(),
-              style: const TextStyle(color: Colors.red),
-            ),
-            onTap: _showLogoutDialog,
-          ),
+          if (isConfigLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(color: AppColors.primaryGreen),
+              ),
+            )
+          else
+            ...drawerItems.map((item) {
+              final iconName = item['icon']?.toString() ?? '';
+              final action = item['action']?.toString() ?? '';
+              final title = getLocalizedLabel(item);
+              final iconColor = action == 'logout' ? Colors.red : AppColors.primaryGreen;
+              final textColor = action == 'logout' ? Colors.red : AppColors.textPrimary;
+
+              if (action == 'language') {
+                return ExpansionTile(
+                  leading: Icon(getIconFromString(iconName), color: iconColor),
+                  title: Text(title, style: TextStyle(color: textColor)),
+                  children: ['English', 'සිංහල', 'தமிழ்']
+                      .map(
+                        (lang) => ListTile(
+                          title: Text(lang),
+                          trailing: selectedLanguage == lang
+                              ? const Icon(Icons.check, color: AppColors.primaryGreen)
+                              : null,
+                          onTap: () {
+                            _saveLanguage(lang);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      )
+                      .toList(),
+                );
+              }
+
+              return ListTile(
+                leading: Icon(getIconFromString(iconName), color: iconColor),
+                title: Text(title, style: TextStyle(color: textColor)),
+                onTap: () {
+                  Navigator.pop(context);
+                  if (action == 'home') {
+                    setState(() => _navIndex = 0);
+                  } else if (action == 'refresh') {
+                    _initPrefs();
+                    Fluttertoast.showToast(msg: 'refresh_data'.tr());
+                  } else if (action == 'logout') {
+                    _showLogoutDialog();
+                  } else if (action == 'settings') {
+                    // Custom action for settings
+                  }
+                },
+              );
+            }),
         ],
       ),
     );
   }
 
   Widget _buildTopNav() {
-    final items = [
-      {'icon': Icons.dynamic_feed_rounded, 'label':'feed'.tr()},
-      {'icon': Icons.newspaper_rounded, 'label': 'news'.tr()},
-      {'icon': Icons.volunteer_activism, 'label': 'donate'.tr()},
-      {'icon': Icons.group, 'label': 'community'.tr()},
-      {'icon': Icons.person_outline_rounded, 'label': 'profile'.tr()},
-    ];
+    if (isConfigLoading) {
+      return const SizedBox(
+        height: 60,
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryGreen),
+        ),
+      );
+    }
 
     return Container(
       decoration: const BoxDecoration(
@@ -468,16 +632,18 @@ class _FeedScreenState extends State<FeedScreen> {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(items.length, (i) {
-          final sel = _navIndex == i;
+        children: List.generate(topNavItems.length, (i) {
+          final item = topNavItems[i];
+          final iconName = item['icon']?.toString() ?? '';
+          final label = getLocalizedLabel(item);
+          final actionIndex = item['action_index'] as int? ?? i;
+          
+          final sel = _navIndex == actionIndex;
           return Expanded(
             child: InkWell(
               onTap: () {
-                if (i == 3) {
-                  // ✅ FIX: Push RegistrationForm and only call _initPrefs()
-                  // when the result is `true` (member was successfully registered).
-                  // This prevents the organizer's own profile from being
-                  // overwritten with the newly registered member's token/data.
+                if (actionIndex == 3) {
+                  // Push RegistrationForm and only call _initPrefs() when result is true
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -486,13 +652,12 @@ class _FeedScreenState extends State<FeedScreen> {
                       ),
                     ),
                   ).then((result) {
-                    // result == true means a new member was successfully registered
                     if (result == true) {
                       _initPrefs();
                     }
                   });
                 } else {
-                  setState(() => _navIndex = i);
+                  setState(() => _navIndex = actionIndex);
                 }
               },
               child: Container(
@@ -511,7 +676,7 @@ class _FeedScreenState extends State<FeedScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      items[i]['icon'] as IconData,
+                      getIconFromString(iconName),
                       color: sel
                           ? AppColors.primaryGreen
                           : AppColors.textSecondary,
@@ -519,7 +684,7 @@ class _FeedScreenState extends State<FeedScreen> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      items[i]['label'] as String,
+                      label,
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         fontWeight: sel ? FontWeight.w700 : FontWeight.w500,
