@@ -296,7 +296,7 @@ const RESOURCES = {"assets/assets/translations/si.json": "a802f031d08fef0a7ea1ec
 "assets/AssetManifest.bin.json": "c32008bb20765c1420988af827224c8f",
 "assets/NOTICES": "dc3061454277525bff17ac14095d4762",
 "assets/AssetManifest.bin": "7be9825aa1868d4de8a593afc3168334",
-"flutter_bootstrap.js": "5d3126a9ea9f9d48bb0dfc0b31e5b0b0",
+"flutter_bootstrap.js": "cf5b24a367824ba6eda3cecc4dc1286d",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "main.dart.js": "365e56f4b7f7980f5dfabad24e9b354a",
 "canvaskit/canvaskit.js": "728b2d477d9b8c14593d4f9b82b484f3",
