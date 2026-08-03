@@ -7,6 +7,7 @@ import 'package:statelink/screens/registration.dart';
 import 'package:statelink/screens/splashScreen.dart';
 import 'package:statelink/api/auth_services.dart'; // 👈 add this
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -17,6 +18,11 @@ final GoRouter appRouter = GoRouter(
     // Skip redirect logic for web-feed path
     if (path == '/web-feed') {
       return null;
+    }
+
+    // On Web, redirect all routes to /web-feed to only show the feed
+    if (kIsWeb) {
+      return '/web-feed';
     }
 
     // If logged in and trying to visit login or splash, skip to home
