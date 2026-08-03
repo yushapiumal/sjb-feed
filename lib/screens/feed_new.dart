@@ -64,7 +64,7 @@ class _FeedScreenState extends State<FeedScreen> {
   late Timer _timer;
 
   // Dynamic Navigation & WebView Configurations
-  String hostedFeedUrl = 'https://statelink-web-feed.web.app/#/web-feed'; // fallback default
+  String hostedFeedUrl = 'https://sjb-feed.onrender.com/'; // fallback default
   WebViewController? _webViewController;
   List<Map<String, dynamic>> topNavItems = [];
   List<Map<String, dynamic>> drawerItems = [];
@@ -176,7 +176,7 @@ class _FeedScreenState extends State<FeedScreen> {
     if (kIsWeb) return;
     
     String url = hostedFeedUrl;
-    final queryStr = 'userId=${Uri.encodeComponent(userId)}&userName=${Uri.encodeComponent(userName)}&userPhoto=${Uri.encodeComponent(userPhoto)}';
+    final queryStr = 'userId=${Uri.encodeComponent(userId)}&userName=${Uri.encodeComponent(userName)}&userPhoto=${Uri.encodeComponent(userPhoto)}&embedded=true';
     if (url.contains('?')) {
       url = '$url&$queryStr';
     } else {
