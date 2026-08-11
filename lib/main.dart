@@ -97,7 +97,7 @@ class MyApp extends StatelessWidget {
       create: (_) => AuthProvider(),
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
-        title: 'SJB Mobile App',
+        title: 'TeamSajith',
         theme: AppTheme.lightTheme,
         locale: context.locale,
         supportedLocales: context.supportedLocales,

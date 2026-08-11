@@ -6,7 +6,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Statelink</string>
+	<string>TeamSajith</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -14,7 +14,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>statelink</string>
+	<string>TeamSajith</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -56,7 +56,7 @@
 	<key>FacebookAppID</key>
 	<string>594523606870232</string>
 	<key>FacebookDisplayName</key>
-	<string>Statelink</string>
+	<string>TeamSajith</string>
 	<!-- Replace with your Facebook Client Token from the Facebook Developer portal -->
 	<key>FacebookClientToken</key>
 	<string>YOUR_FACEBOOK_CLIENT_TOKEN</string>

@@ -345,7 +345,7 @@ class _FeedScreenState extends State<FeedScreen> {
       shadowColor: Colors.black12,
       leading: Padding(
         padding: const EdgeInsets.all(10),
-        child: Image.asset('assets/images/lg.png', fit: BoxFit.contain),
+        child: Image.asset('assets/images/sjb_app_logo.png', fit: BoxFit.contain),
       ),
       title: Text(
         'sjb_feed_lanka'.tr(),
