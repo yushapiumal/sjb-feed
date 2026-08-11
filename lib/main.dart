@@ -13,6 +13,7 @@ import 'package:statelink/services/notification_service.dart';
 import 'package:statelink/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:statelink/services/toast_util.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -103,6 +104,7 @@ class MyApp extends StatelessWidget {
         supportedLocales: context.supportedLocales,
         localizationsDelegates: context.localizationDelegates,
         routerConfig: appRouter,
+        scaffoldMessengerKey: ToastUtil.messengerKey,
 
         // home: const SplashScreen(),
       ),

@@ -1801,7 +1801,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
           }
         }
       },
-      child: Scaffold(
+       child: Scaffold(
         body: Stack(
           children: [
             // Gradient background
@@ -1815,6 +1815,41 @@ class _RegistrationFormState extends State<RegistrationForm> {
                     AppColors.secondaryGreen,
                     const Color(0xFF043D33),
                   ],
+                ),
+              ),
+            ),
+
+            // Back button
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 16,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    if (_currentPage > 0) {
+                      setState(() => _currentPage--);
+                    } else {
+                      if (Navigator.of(context).canPop()) {
+                        Navigator.of(context).pop();
+                      } else {
+                        context.go('/home');
+                      }
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(50),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.15),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
                 ),
               ),
             ),

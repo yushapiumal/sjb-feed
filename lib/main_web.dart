@@ -8,6 +8,7 @@ import 'package:statelink/screens/feed_tab.dart';
 import 'package:statelink/screens/feed_new.dart';
 import 'package:statelink/provider/auth_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:statelink/services/toast_util.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +94,7 @@ class WebFeedApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'SJB Feed Web',
+      scaffoldMessengerKey: ToastUtil.messengerKey,
       locale: context.locale,
       supportedLocales: context.supportedLocales,
       localizationsDelegates: context.localizationDelegates,
