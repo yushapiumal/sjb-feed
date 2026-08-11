@@ -49,6 +49,8 @@ class _FeedScreenState extends State<FeedScreen> {
   String userGnd = '';
   String userMobile = '';
   String userWmobile = '';
+  String userToken = '';
+  String userRole = '';
   String userSocialFb = '';
   String userSocialX = '';
   String userContribute = '';
@@ -141,7 +143,7 @@ class _FeedScreenState extends State<FeedScreen> {
       if (doc.exists && doc.data() != null) {
         final data = doc.data()!;
         setState(() {
-          hostedFeedUrl = data['hosted_feed_url'] ?? hostedFeedUrl;
+          hostedFeedUrl = data['hosted_feed_url']?.toString() ?? '';
           if (data['top_nav_items'] != null) {
             topNavItems = List<Map<String, dynamic>>.from(data['top_nav_items']);
           } else {
@@ -174,9 +176,17 @@ class _FeedScreenState extends State<FeedScreen> {
 
   void _initWebViewController() {
     if (kIsWeb) return;
+    if (hostedFeedUrl.isEmpty) return;
     
     String url = hostedFeedUrl;
-    final queryStr = 'userId=${Uri.encodeComponent(userId)}&userName=${Uri.encodeComponent(userName)}&userPhoto=${Uri.encodeComponent(userPhoto)}&embedded=true';
+    final langCode = context.locale.languageCode;
+    final queryStr = 'userId=${Uri.encodeComponent(userId)}'
+        '&userName=${Uri.encodeComponent(userName)}'
+        '&userPhoto=${Uri.encodeComponent(userPhoto)}'
+        '&token=${Uri.encodeComponent(userToken)}'
+        '&role=${Uri.encodeComponent(userRole)}'
+        '&mobile=${Uri.encodeComponent(userMobile)}'
+        '&lang=$langCode';
     if (url.contains('?')) {
       url = '$url&$queryStr';
     } else {
@@ -239,6 +249,19 @@ class _FeedScreenState extends State<FeedScreen> {
     // and do NOT overwrite it with any newly registered member's data.
     userId = prefs?.getString('member_id') ?? 'guest';
     selectedLanguage = prefs?.getString('language') ?? 'English';
+    userToken = prefs?.getString('token') ?? '';
+    userRole = prefs?.getString('role') ?? '';
+    userMobile = prefs?.getString('mobile_number') ?? '';
+
+    // Synchronize language selected in splash screen
+    final langCode = prefs?.getString('languageCode');
+    if (langCode != null) {
+      final newLocale = Locale(langCode);
+      if (context.locale != newLocale) {
+        await context.setLocale(newLocale);
+        selectedLanguage = langCode == 'si' ? 'සිංහල' : langCode == 'ta' ? 'தமிழ்' : 'English';
+      }
+    }
 
     try {
       final memberId = prefs?.getString('member_id');
@@ -388,22 +411,23 @@ class _FeedScreenState extends State<FeedScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         backgroundColor: const Color(0xFFF0F2F5),
-        appBar: _buildAppBar(),
-        drawer: _buildDrawer(),
+        appBar: kIsWeb ? _buildAppBar() : null,
+        drawer: kIsWeb ? _buildDrawer() : null,
         body: Stack(
           children: [
             Column(
               children: [
-                AnimatedSlide(
-                  offset: _navVisible ? Offset.zero : const Offset(0, -1),
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  child: AnimatedOpacity(
-                    opacity: _navVisible ? 1.0 : 0.0,
+                if (kIsWeb)
+                  AnimatedSlide(
+                    offset: _navVisible ? Offset.zero : const Offset(0, -1),
                     duration: const Duration(milliseconds: 250),
-                    child: _buildTopNav(),
+                    curve: Curves.easeInOut,
+                    child: AnimatedOpacity(
+                      opacity: _navVisible ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 250),
+                      child: _buildTopNav(),
+                    ),
                   ),
-                ),
                 Expanded(
                   child: isConfigLoading
                       ? const Center(
@@ -435,57 +459,63 @@ class _FeedScreenState extends State<FeedScreen> {
                           selectedLanguage: selectedLanguage,
                           onLogout: _showLogoutDialog,
                         )
-                      : (!kIsWeb && _webViewController != null)
-                          ? WebViewWidget(controller: _webViewController!)
-                          : FeedTab(
+                      : kIsWeb
+                          ? FeedTab(
                               userId: userId,
                               userName: userName,
                               userPhoto: userPhoto,
                               scrollController: _scrollController,
-                            ),
+                            )
+                          : _webViewController != null
+                              ? SafeArea(
+                                  bottom: false,
+                                  child: WebViewWidget(controller: _webViewController!),
+                                )
+                              : const SizedBox.shrink(),
                 ),
               ],
             ),
-            // Centered Arrow Tab to Open Drawer
-            Positioned(
-              left: 0,
-              top: MediaQuery.of(context).size.height * 0.45,
-              child: GestureDetector(
-                onTap: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-                child: Container(
-                  width: 28,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(16),
-                      bottomRight: Radius.circular(16),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 8,
-                        offset: const Offset(2, 2),
+            if (kIsWeb)
+              // Centered Arrow Tab to Open Drawer
+              Positioned(
+                left: 0,
+                top: MediaQuery.of(context).size.height * 0.45,
+                child: GestureDetector(
+                  onTap: () {
+                    _scaffoldKey.currentState?.openDrawer();
+                  },
+                  child: Container(
+                    width: 28,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(16),
+                        bottomRight: Radius.circular(16),
                       ),
-                    ],
-                    border: Border(
-                      top: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2), width: 1.5),
-                      right: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2), width: 1.5),
-                      bottom: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 8,
+                          offset: const Offset(2, 2),
+                        ),
+                      ],
+                      border: Border(
+                        top: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2), width: 1.5),
+                        right: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2), width: 1.5),
+                        bottom: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2), width: 1.5),
+                      ),
                     ),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      color: AppColors.primaryGreen,
-                      size: 22,
+                    child: const Center(
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.primaryGreen,
+                        size: 22,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),

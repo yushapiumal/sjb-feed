@@ -8,10 +8,32 @@ import 'package:statelink/screens/splashScreen.dart';
 import 'package:statelink/api/auth_services.dart'; // 👈 add this
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shared_preferences/shared_preferences.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: kIsWeb ? '/home' : '/',
   redirect: (context, state) async {
+    final queryParams = state.uri.queryParameters;
+    if (kIsWeb && queryParams.containsKey('token') && queryParams['token']!.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', queryParams['token']!);
+      if (queryParams.containsKey('userId')) {
+        await prefs.setString('member_id', queryParams['userId']!);
+      }
+      if (queryParams.containsKey('userName')) {
+        await prefs.setString('fname', queryParams['userName']!);
+      }
+      if (queryParams.containsKey('role')) {
+        await prefs.setString('role', queryParams['role']!);
+      }
+      if (queryParams.containsKey('mobile')) {
+        await prefs.setString('mobile_number', queryParams['mobile']!);
+      }
+      if (queryParams.containsKey('lang')) {
+        await prefs.setString('languageCode', queryParams['lang']!);
+      }
+    }
+
     final loggedIn = await AuthService.isLoggedIn();
     final path = state.matchedLocation;
 
@@ -20,9 +42,15 @@ final GoRouter appRouter = GoRouter(
       return null;
     }
 
-    // On Web, redirect all routes to /web-feed to only show the feed
+    // On Web, redirect to /web-feed to only show the feed IF it is embedded (e.g. in the mobile app's WebView)
     if (kIsWeb) {
-      return '/web-feed';
+      final isEmbedded = state.uri.queryParameters['embedded'] == 'true';
+      if (isEmbedded) {
+        return Uri(path: '/web-feed', queryParameters: state.uri.queryParameters).toString();
+      }
+      if (path == '/') {
+        return '/home';
+      }
     }
 
     // If logged in and trying to visit login or splash, skip to home
@@ -31,9 +59,10 @@ final GoRouter appRouter = GoRouter(
     }
 
     // If not logged in and trying to visit a protected page, send to login
-    if (!loggedIn && (path == '/home' || path == '/social_login')) {
-      return '/login';
-    }
+    // Temporary: Bypass redirect to login due to WhatsApp validation issues
+    // if (!loggedIn && (path == '/home' || path == '/social_login')) {
+    //   return '/login';
+    // }
 
     return null; // no redirect needed
   },
@@ -71,14 +100,25 @@ final GoRouter appRouter = GoRouter(
         final userId = params['userId'] ?? 'guest';
         final userName = params['userName'] ?? 'Guest User';
         final userPhoto = params['userPhoto'] ?? '';
-        return Scaffold(
-          body: FeedTab(
-            userId: userId,
-            userName: userName,
-            userPhoto: userPhoto,
-            scrollController: ScrollController(),
-          ),
-        );
+        final embedded = params['embedded'] ?? 'false';
+
+        if (embedded == 'true') {
+          return Scaffold(
+            body: FeedTab(
+              userId: userId,
+              userName: userName,
+              userPhoto: userPhoto,
+              scrollController: ScrollController(),
+            ),
+          );
+        } else {
+          return FeedScreen(
+            userData: {
+              'name': userName,
+              'photoUrl': userPhoto,
+            },
+          );
+        }
       },
     ),
   ],

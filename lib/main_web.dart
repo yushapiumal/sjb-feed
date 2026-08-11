@@ -7,6 +7,7 @@ import 'package:statelink/provider/feed_provider.dart';
 import 'package:statelink/screens/feed_tab.dart';
 import 'package:statelink/screens/feed_new.dart';
 import 'package:statelink/provider/auth_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,12 +29,35 @@ void main() async {
   final userName = uri.queryParameters['userName'] ?? 'Guest User';
   final userPhoto = uri.queryParameters['userPhoto'] ?? '';
   final embedded = uri.queryParameters['embedded'] ?? 'false';
+  final token = uri.queryParameters['token'] ?? '';
+  final role = uri.queryParameters['role'] ?? '';
+  final mobile = uri.queryParameters['mobile'] ?? '';
+  final lang = uri.queryParameters['lang'] ?? '';
+
+  final prefs = await SharedPreferences.getInstance();
+  if (token.isNotEmpty) {
+    await prefs.setString('token', token);
+    await prefs.setString('member_id', userId);
+    await prefs.setString('fname', userName);
+    await prefs.setString('role', role);
+    await prefs.setString('mobile_number', mobile);
+  }
+  if (lang.isNotEmpty) {
+    await prefs.setString('languageCode', lang);
+  }
 
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('si'), Locale('ta')],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
+      startLocale: lang == 'si'
+          ? const Locale('si')
+          : lang == 'ta'
+              ? const Locale('ta')
+              : lang == 'en'
+                  ? const Locale('en')
+                  : null,
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),

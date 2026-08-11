@@ -82,7 +82,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         curve: Curves.easeInOutCubic,
       );
     } else {
-      context.go('/login');
+      // Temporary: Navigate directly to home instead of login screen due to WhatsApp validation issues
+      // context.go('/login');
+      context.go('/home');
     }
   }
 
@@ -373,7 +375,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         Padding(
                           padding: const EdgeInsets.only(top: 14),
                           child: GestureDetector(
-                            onTap: () => context.go('/login'),
+                            // Temporary: Navigate directly to home instead of login screen due to WhatsApp validation issues
+                            // onTap: () => context.go('/login'),
+                            onTap: () => context.go('/home'),
                             child: Text(
                               "Skip",
                               style: GoogleFonts.inter(
